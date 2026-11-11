@@ -1,0 +1,14 @@
+{
+  "name": "kale-savunma",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node test/sim.test.js",
+    "balance": "node test/balance.js"
+  },
+  "dependencies": {
+    "three": "^0.187.0",
+    "ws": "^8.22.2"
+  }
+}
