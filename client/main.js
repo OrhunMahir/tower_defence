@@ -3,25 +3,25 @@ import * as THREE from 'three';
 import { buildWorld, makeHero, poseHero, makeBeast, hAt, winMat, fireMat, orbMat, TEAM_COLORS, GLOW, BEAST_SCALE, MORTAR_POS, BALLISTA_POS } from './models.js';
 
 const $ = (id) => document.getElementById(id);
-const CLASS_TR = { knight: 'Şövalye', archer: 'Okçu', mage: 'Büyücü' };
+const CLASS_TR = { knight: 'Knight', archer: 'Archer', mage: 'Mage' };
 const SNAP_MS = 50;
 const B_KEYS = ['hall', 'walls', 'archers', 'mine', 'smith'];
 const B_TR = {
-  hall: ['İç kale', 'Can +600 · diğer seviyelerin sınırı · her seviyede özellik seçimi'],
-  walls: ['Surlar', 'Sur ve kapı canı +%50, surlar yükselir'],
-  archers: ['Okçular', 'Surlara daha çok okçu, daha çok hasar'],
-  mine: ['Altın madeni', 'Her dalga sonunda +25 altın'],
-  smith: ['Demirci', 'Daha üst kademe silah ve zırhı açar'],
+  hall: ['Keep', '+600 HP · caps every other level · a perk choice per level'],
+  walls: ['Walls', '+50% wall and gate HP, taller walls'],
+  archers: ['Archers', 'More archers on the walls, more damage'],
+  mine: ['Gold mine', '+25 gold after every wave'],
+  smith: ['Blacksmith', 'Unlocks higher weapon and armor tiers'],
 };
-const STAT_TR = [['str', 'Güç', 'Hasar +%8'], ['agi', 'Çeviklik', 'Saldırı hızı +%6, hareket +%3'], ['vit', 'Dayanıklılık', 'Can +15'], ['crit', 'Kritik', 'Çift hasar şansı +%5']];
-const GEAR_TR = [['wpn', 'Silah', 'Kademe başına hasar +%35', 15], ['arm', 'Zırh', 'Kademe başına alınan hasar -%12', 16]];
+const STAT_TR = [['str', 'Strength', '+8% damage'], ['agi', 'Agility', '+6% attack speed, +3% movement'], ['vit', 'Vitality', '+15 HP'], ['crit', 'Crit', '+5% chance of double damage']];
+const GEAR_TR = [['wpn', 'Weapon', '+35% damage per tier', 15], ['arm', 'Armor', '-12% damage taken per tier', 16]];
 const P_TR = {
-  mortar: ['Havan', 'Kalabalığın ortasına patlayan gülle atar'],
-  ballista: ['Balista', 'En güçlü canavara ağır ok atar'],
-  happy: ['Mutlu halk', 'Dalga sonu geliri +%50'],
-  sharp: ['Keskin oklar', 'Sur okçuları +%30 hasar'],
-  rapid: ['Hızlı yaylar', 'Sur okçuları +%20 hızlı atar'],
-  masons: ['Usta taşçılar', 'Onarım %40 ucuzlar'],
+  mortar: ['Mortar', 'Lobs exploding shells into the thickest crowd'],
+  ballista: ['Ballista', 'Fires heavy bolts at the toughest monster'],
+  happy: ['Happy citizens', '+50% income after each wave'],
+  sharp: ['Sharp arrows', 'Wall archers deal +30% damage'],
+  rapid: ['Rapid bows', 'Wall archers shoot 20% faster'],
+  masons: ['Master masons', 'Repairs cost 40% less'],
 };
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -74,9 +74,9 @@ function connect(cls) {
     const m = JSON.parse(ev.data);
     if (m.t === 'hello') { myId = m.id; layout = m.layout; world = buildWorld(scene, layout); }
     else if (m.t === 's' && world) onSnap(m);
-    else if (m.t === 'full') showOverlay('Oda dolu', 'En fazla 4 oyuncu girebilir.');
+    else if (m.t === 'full') showOverlay('Room full', 'Up to 4 players can join.');
   };
-  ws.onclose = () => { if (myId) showOverlay('Bağlantı koptu', 'Sayfayı yenileyip yeniden bağlan.'); };
+  ws.onclose = () => { if (myId) showOverlay('Connection lost', 'Reload the page to reconnect.'); };
 }
 const send = (m) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(m)); };
 
@@ -151,11 +151,11 @@ function onSnap(m) {
   for (const [id, o] of enemies) if (!seen.has(id)) { scene.remove(o.g); if (o.bar) scene.remove(o.bar); enemies.delete(id); }
 
   seen.clear();
-  for (const [id, kind, x, z, ang] of m.pr) {
+  for (const [id, kind, x, z, ang, high] of m.pr) {
     seen.add(id);
     let o = projs.get(id);
     if (!o) {
-      o = { m: new THREE.Mesh(kind === 1 ? orbGeo : arrowGeo, kind === 1 ? orbMat : arrowMat), y: kind === 2 ? 4 : kind === 4 ? 5 : 1.5 };
+      o = { m: new THREE.Mesh(kind === 1 ? orbGeo : arrowGeo, kind === 1 ? orbMat : arrowMat), y: kind === 2 ? 4 : kind === 4 ? 5 : high ? 5 : 1.5 };
       o.m.rotation.y = ang;
       if (kind === 4) { o.m.scale.setScalar(2.4); world.ballista.rotation.y = ang; }
       scene.add(o.m);
@@ -168,15 +168,16 @@ function onSnap(m) {
   for (const [kind, x, z, v] of m.fx) {
     if (kind === 0) addFx(puffGeo, GLOW[v], x, 0.8 * BEAST_SCALE[v], z, BEAST_SCALE[v] * 1.3, 0.35);
     else if (kind === 1) addFx(puffGeo, 0x6fdcff, x, 1, z, v, 0.3);
-    else if (kind === 2) { addFx(haloGeo, 0xffd75a, x, 0.3, z, 1.3, 0.9, 3); if (v === myId) toast('Seviye atladın · 1 stat puanı'); }
+    else if (kind === 2) { addFx(haloGeo, 0xffd75a, x, 0.3, z, 1.3, 0.9, 3); if (v === myId) toast('Level up · 1 stat point'); }
     else if (kind === 3) addFx(puffGeo, 0xe5484d, x, 1, z, 1.6, 0.5);
-    else if (kind === 4) toast(`${B_TR[v][0]} yükseltildi`);
+    else if (kind === 4) toast(`${B_TR[v][0]} upgraded`);
     else if (kind === 5) addFx(orbGeo, 0x222222, MORTAR_POS[0], 2, MORTAR_POS[2], 1.6, v, 0, [x, z]);
-    else if (kind === 6) toast(`Yeni özellik: ${P_TR[v][0]}`);
+    else if (kind === 6) toast(`New perk: ${P_TR[v][0]}`);
   }
 
   const [bHall, bWalls, bArchers, bMine, bSmith] = m.b, grow = 1 + 0.12 * (bWalls - 1);
   m.sg.forEach((v, i) => { const g = world.segs[i]; g.visible = v > 0; g.scale.y = (0.55 + 0.45 * (v / 100)) * grow; });
+  world.grow = grow;
   for (const g of world.towers) g.scale.y = 1 + 0.1 * (bWalls - 1);
   world.hall.scale.y = 1 + 0.08 * (bHall - 1);
   world.mine.visible = bMine > 0; world.smith.visible = bSmith > 0;
@@ -186,7 +187,7 @@ function onSnap(m) {
     g.visible = i < layout.archerCount[bArchers] && m.sg[layout.posts[i][2]] > 0;
     g.position.y = world.wallH * grow * (0.55 + 0.45 * (m.sg[layout.posts[i][2]] / 100));
   });
-  if (prevPhase !== m.ph && m.ph === 'wave') toast(m.wave % 10 === 0 ? `Dalga ${m.wave} · Kraliçe geliyor` : `Dalga ${m.wave}`);
+  if (prevPhase !== m.ph && m.ph === 'wave') toast(m.wave % 10 === 0 ? `Wave ${m.wave} · The Queen is coming` : `Wave ${m.wave}`);
   updateHud(m, boss);
 }
 
@@ -203,14 +204,14 @@ function updateHud(m, boss) {
   const me = players.get(myId), row = me && me.row;
   if (m.ph === 'prep') {
     const next = m.wave + 1;
-    $('phase').textContent = `Hazırlık · ${m.tm} sn`;
-    $('sub').textContent = `Sıradaki: Dalga ${next}${next % 10 === 0 ? ' (Kraliçe)' : ''}${row && row[12] && m.pl.length > 1 ? ' · Hazırsın, diğerleri bekleniyor' : ''}`;
+    $('phase').textContent = 'Preparation';
+    $('sub').textContent = `Next: wave ${next}${next % 10 === 0 ? ' (Queen)' : ''}${row && row[12] && m.pl.length > 1 ? ' · You are ready, waiting for the others' : ''}`;
   } else if (m.ph === 'wave') {
-    $('phase').textContent = `Dalga ${m.wave}`;
-    $('sub').textContent = `${m.left} canavar kaldı`;
+    $('phase').textContent = `Wave ${m.wave}`;
+    $('sub').textContent = `${m.left} ${m.left === 1 ? 'monster' : 'monsters'} left`;
   } else {
-    $('phase').textContent = 'Kale düştü';
-    $('sub').textContent = `Ulaştığın dalga: ${m.reached} · ${m.tm} sn sonra baştan başlıyor`;
+    $('phase').textContent = 'The castle has fallen';
+    $('sub').textContent = `You reached wave ${m.reached} · restarting in ${m.tm} s`;
   }
   $('ready').hidden = !(m.ph === 'prep' && row && !row[12]);
   $('boss').hidden = boss === null;
@@ -221,8 +222,8 @@ function updateHud(m, boss) {
   renderBuild(m);
   $('team').replaceChildren(...m.pl.map((r) => {
     const d = document.createElement('div'), a = document.createElement('span'), b = document.createElement('span');
-    a.textContent = `${CLASS_TR[r[1]]}${r[0] === myId ? ' (sen)' : ''}`;
-    b.textContent = r[10] ? `${r[10]} sn` : `Sv ${r[7]} · ${r[5]} can`;
+    a.textContent = `${CLASS_TR[r[1]]}${r[0] === myId ? ' (you)' : ''}`;
+    b.textContent = r[10] ? `${r[10]} s` : `Lv ${r[7]} · ${r[5]} HP`;
     d.append(a, b);
     return d;
   }));
@@ -230,14 +231,14 @@ function updateHud(m, boss) {
   $('meName').textContent = CLASS_TR[row[1]];
   $('hpTxt').textContent = `${row[5]} / ${row[6]}`;
   $('hpBar').style.width = pct(row[5], row[6]);
-  $('lvl').textContent = `Seviye ${row[7]}`;
+  $('lvl').textContent = `Level ${row[7]}`;
   $('xpTxt').textContent = `${row[8]} / ${row[9]} XP`;
   $('xpBar').style.width = pct(row[8], row[9]);
-  if (row[10]) toast(`Yeniden doğuyorsun: ${row[10]}`, 700);
+  if (row[10]) toast(`Respawning in ${row[10]}`, 700);
   const sig = JSON.stringify([row[13], row[14], row[15], row[16]]);
   if (sig === statSig) return;
   statSig = sig;
-  $('stats').innerHTML = `<div class="lbl"><span>Silah K${row[15]} · Zırh K${row[16]}</span><span>${row[13] ? `${row[13]} stat puanı` : ''}</span></div>`
+  $('stats').innerHTML = `<div class="lbl"><span>Weapon T${row[15]} · Armor T${row[16]}</span><span>${row[13] ? `${row[13]} stat ${row[13] === 1 ? 'point' : 'points'}` : ''}</span></div>`
     + STAT_TR.map(([k, n, d], i) => `<button data-stat="${k}" title="${d}" ${row[13] ? '' : 'disabled'}>${n} ${row[14][i]}${row[13] ? ' +' : ''}</button>`).join('');
 }
 
@@ -254,35 +255,35 @@ function renderBuild(m) {
   if (!show) return;
   let h = '';
   if (m.of) {
-    h += '<h3>Özellik seç</h3>';
+    h += '<h3>Choose a perk</h3>';
     for (const k of m.of) h += `<button class="row perk" data-perk="${k}"><b>${P_TR[k][0]}</b><span>${P_TR[k][1]}</span></button>`;
   }
   if (prep) {
-    h += '<h3>Kale</h3>';
+    h += '<h3>Castle</h3>';
     B_KEYS.forEach((k, i) => {
       const l = m.b[i], d = layout.buildings[k], cost = d.cost[l];
-      let label = `${cost} altın`, off = m.gold < cost;
-      if (l >= d.max) { label = 'En üst seviye'; off = true; }
-      else if (k !== 'hall' && l >= m.b[0]) { label = `İç kale Sv ${l + 1} gerekli`; off = true; }
-      else if (k === 'hall' && m.of) { label = 'Önce özellik seç'; off = true; }
-      h += `<div class="row"><div><b>${B_TR[k][0]} <i>${l ? `Sv ${l}` : 'yok'}</i></b><span>${B_TR[k][1]}</span></div><button data-up="${k}" ${off ? 'disabled' : ''}>${l ? label : label.replace('altın', 'altın · kur')}</button></div>`;
+      let label = `${l ? '' : 'Build · '}${cost} gold`, off = m.gold < cost;
+      if (l >= d.max) { label = 'Max level'; off = true; }
+      else if (k !== 'hall' && l >= m.b[0]) { label = `Needs keep Lv ${l + 1}`; off = true; }
+      else if (k === 'hall' && m.of) { label = 'Choose a perk first'; off = true; }
+      h += `<div class="row"><div><b>${B_TR[k][0]} <i>${l ? `Lv ${l}` : 'not built'}</i></b><span>${B_TR[k][1]}</span></div><button data-up="${k}" ${off ? 'disabled' : ''}>${label}</button></div>`;
     });
-    if (m.rc[0] > 0) h += `<div class="row"><div><b>Surları onar</b></div><button data-repair="walls" ${m.gold ? '' : 'disabled'}>${m.rc[0]} altın</button></div>`;
-    if (m.rc[1] > 0) h += `<div class="row"><div><b>İç kaleyi onar</b></div><button data-repair="hall" ${m.gold ? '' : 'disabled'}>${m.rc[1]} altın</button></div>`;
+    if (m.rc[0] > 0) h += `<div class="row"><div><b>Repair walls</b></div><button data-repair="walls" ${m.gold ? '' : 'disabled'}>${m.rc[0]} gold</button></div>`;
+    if (m.rc[1] > 0) h += `<div class="row"><div><b>Repair keep</b></div><button data-repair="hall" ${m.gold ? '' : 'disabled'}>${m.rc[1]} gold</button></div>`;
   }
   if (prep && r) {
-    h += '<h3>Demirci</h3>';
-    if (!m.b[4]) h += '<p>Silah ve zırh almak için önce demirciyi kur.</p>';
+    h += '<h3>Blacksmith</h3>';
+    if (!m.b[4]) h += '<p>Build the blacksmith to buy weapons and armor.</p>';
     else for (const [kind, name, desc, idx] of GEAR_TR) {
       const t = r[idx], costs = layout.gear[kind];
-      let label = `${costs[t]} altın`, off = m.gold < costs[t];
-      if (t >= costs.length) { label = 'En üst kademe'; off = true; }
-      else if (m.b[4] < t) { label = `Demirci Sv ${t} gerekli`; off = true; }
-      h += `<div class="row"><div><b>${name} <i>Kademe ${t}</i></b><span>${desc}</span></div><button data-gear="${kind}" ${off ? 'disabled' : ''}>${label}</button></div>`;
+      let label = `${costs[t]} gold`, off = m.gold < costs[t];
+      if (t >= costs.length) { label = 'Max tier'; off = true; }
+      else if (m.b[4] < t) { label = `Needs blacksmith Lv ${t}`; off = true; }
+      h += `<div class="row"><div><b>${name} <i>Tier ${t}</i></b><span>${desc}</span></div><button data-gear="${kind}" ${off ? 'disabled' : ''}>${label}</button></div>`;
     }
   }
   const owned = layout.perks.map((k, i) => (m.pk[i] ? `${P_TR[k][0]}${m.pk[i] > 1 ? ` ×${m.pk[i]}` : ''}` : '')).filter(Boolean);
-  if (owned.length) h += `<p>Özellikler: ${owned.join(', ')}</p>`;
+  if (owned.length) h += `<p>Perks: ${owned.join(', ')}</p>`;
   $('build').innerHTML = h;
 }
 $('build').onclick = (e) => {
@@ -341,9 +342,10 @@ function frame() {
       o.swing = Math.max(0, o.swing - dt * 4);
       o.rot = lerpAngle(o.rot, o.aim, dt * 20);
       o.h.g.visible = o.ring.visible = !o.dead;
-      o.h.g.position.set(o.rx, 0, o.rz);
+      o.y = (o.y ?? 0) + ((o.row[17] ? world.wallH * (world.grow || 1) : 0) - (o.y ?? 0)) * Math.min(1, dt * 10);
+      o.h.g.position.set(o.rx, o.y, o.rz);
       o.h.g.rotation.y = o.rot;
-      o.ring.position.set(o.rx, 0.06, o.rz);
+      o.ring.position.set(o.rx, o.y + 0.06, o.rz);
       poseHero(o.h, walk, o.swing, t + o.id);
     }
     for (const o of enemies.values()) {

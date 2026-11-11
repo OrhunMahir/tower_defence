@@ -7,7 +7,7 @@ const SEG = 4;                  // wall segment length
 const WALL_T = 0.7;             // wall half-thickness
 const TH_HALF = 3.5;            // town hall half-size
 const TOWER_R = 2.1;
-const PREP_FIRST = 30, PREP = 30, OVER_TIME = 8, RESPAWN = 5;
+const OVER_TIME = 8, RESPAWN = 5;
 
 export const CLASSES = {
   knight: { hp: 140, speed: 7, cd: 0.45, dmg: 32, range: 3.2, arc: 2.2 },
@@ -44,6 +44,7 @@ const STAT_MAX = 20;
 export const GEAR = { wpn: [0, 60, 140, 280, 500], arm: [0, 50, 120, 240, 420] };
 const CASTLE_XP_SHARE = 0.4;   // every hero earns this share of XP for kills made by archers and engines
 const heroMaxHp = (p) => CLASSES[p.cls].hp + 15 * p.st.vit;
+const WALL_RANGE = 1.3;        // shots fired from the top of a wall fly this much further
 const thMax = (l) => 1500 + 600 * (l - 1);
 const wallMul = (l) => 1 + 0.5 * (l - 1);
 const REPAIR_HP_PER_GOLD = 20;
@@ -100,7 +101,7 @@ export class Game {
   reset() {
     this.wave = 0;
     this.phase = 'prep';
-    this.timer = PREP_FIRST;
+    this.timer = 0;
     this.gold = 0;
     this.b = Object.fromEntries(Object.entries(BUILDINGS).map(([k, d]) => [k, d.start]));
     this.th = { hp: thMax(1), max: thMax(1) };
@@ -130,7 +131,7 @@ export class Game {
     p.st = { str: 0, agi: 0, vit: 0, crit: 0 };
     p.maxhp = heroMaxHp(p); p.hp = p.maxhp;
     p.x = (slot - 1.5) * 1.2; p.z = 6.5; p.aim = 0;
-    p.cd = 0; p.dead = 0; p.atkN = 0; p.ready = false;
+    p.cd = 0; p.dead = 0; p.atkN = 0; p.ready = false; p.up = false;
   }
 
   layout() {
@@ -149,7 +150,7 @@ export class Game {
   }
 
   addPlayer(cls) {
-    if (!CLASSES[cls]) cls = 'knight';
+    if (!Object.hasOwn(CLASSES, cls)) cls = 'knight';
     const p = { id: this.nextId++, cls, in: { mx: 0, mz: 0, aim: 0, atk: false } };
     this.resetPlayer(p, this.players.size);
     this.players.set(p.id, p);
@@ -179,7 +180,7 @@ export class Game {
   // Class can only change between waves; level and XP are kept.
   setClass(id, cls) {
     const p = this.players.get(id);
-    if (!p || !CLASSES[cls] || this.phase !== 'prep') return;
+    if (!p || !Object.hasOwn(CLASSES, cls) || this.phase !== 'prep') return;
     p.cls = cls;
     p.maxhp = heroMaxHp(p);
     p.hp = p.maxhp;
@@ -266,10 +267,10 @@ export class Game {
       return;
     }
     if (this.phase === 'prep') {
-      this.timer -= dt;
+      // No countdown: the wave starts when every player is ready.
       let allReady = true;
       for (const p of this.players.values()) if (!p.ready) allReady = false;
-      if (this.timer <= 0 || allReady) this.startWave();
+      if (allReady) this.startWave();
     } else {
       this.spawnT -= dt;
       while (this.spawnT <= 0 && this.queue.length) { this.spawn(this.queue.pop()); this.spawnT += this.spawnGap; }
@@ -317,7 +318,7 @@ export class Game {
 
   endWave() {
     this.phase = 'prep';
-    this.timer = PREP;
+    this.timer = 0;
     this.gold += Math.round((25 + 8 * this.wave + 25 * this.b.mine) * (1 + 0.5 * this.perks.happy));
     this.shells = [];
     this.projs = [];
@@ -331,7 +332,7 @@ export class Game {
   collideStatic(e, r, isEnemy) {
     let hit = null;
     for (const s of this.segs) {
-      if (s.hp <= 0) continue;
+      if (s.hp <= 0 || !isEnemy) continue;   // heroes climb onto the walls instead of bumping into them
       if (pushOutBox(e, r, s.x, s.z, s.hw, s.hd)) hit = s;
     }
     for (const [tx, tz] of TOWERS) pushOutCircle(e, r, tx, tz, TOWER_R);
@@ -354,8 +355,9 @@ export class Game {
       const sp = c.speed * (1 + 0.03 * p.st.agi);
       p.x += mx * sp * dt; p.z += mz * sp * dt;
       this.collideStatic(p, 0.5, false);
-      // Defenders never leave the castle, even through a breach.
-      p.x = clamp(p.x, -S + 1.3, S - 1.3); p.z = clamp(p.z, -S + 1.3, S - 1.3);
+      // Defenders never leave the castle, even through a breach. The outer band is the wall walk.
+      p.x = clamp(p.x, -S - 0.3, S + 0.3); p.z = clamp(p.z, -S - 0.3, S + 0.3);
+      p.up = this.segs.some((s) => s.hp > 0 && Math.abs(p.x - s.x) <= s.hw + 0.1 && Math.abs(p.z - s.z) <= s.hd + 0.1);
       p.aim = p.in.aim;
       p.cd -= dt;
       if (p.in.atk && p.cd <= 0) { p.cd = c.cd / (1 + 0.06 * p.st.agi); p.atkN++; this.attack(p, c); }
@@ -369,7 +371,7 @@ export class Game {
     if (c.proj) {
       this.projs.push({
         id: this.nextId++, kind: c.proj.kind, x: p.x + sx * 0.8, z: p.z + sz * 0.8,
-        vx: sx * c.proj.speed, vz: sz * c.proj.speed, ttl: c.proj.ttl, r: c.proj.r, aoe: c.proj.aoe || 0, dmg, owner: p.id,
+        vx: sx * c.proj.speed, vz: sz * c.proj.speed, ttl: c.proj.ttl * (p.up ? WALL_RANGE : 1), high: p.up, r: c.proj.r, aoe: c.proj.aoe || 0, dmg, owner: p.id,
       });
       return;
     }
@@ -445,8 +447,12 @@ export class Game {
         }
         if (best) {
           this.mortarCd = 4;
-          this.shells.push({ x: best.x, z: best.z, t: 1.1 });
-          this.fx.push([5, r2(best.x), r2(best.z), 1.1]);
+          // Lead the target: aim where the group will be when the shell lands, but not inside the walls.
+          const d = Math.hypot(best.x, best.z), edge = Math.max(Math.abs(best.x), Math.abs(best.z));
+          const lead = Math.min(ENEMIES[best.t].speed * 1.1, Math.max(0, d * (1 - (S + 1) / edge)));
+          const tx = best.x * (1 - lead / d), tz = best.z * (1 - lead / d);
+          this.shells.push({ x: tx, z: tz, t: 1.1 });
+          this.fx.push([5, r2(tx), r2(tz), 1.1]);
         }
       }
     }
@@ -527,9 +533,9 @@ export class Game {
       pk: PERKS.map((k) => this.perks[k]),
       of: this.offer,
       sg: this.segs.map((s) => Math.round((s.hp / s.max) * 100)),
-      pl: [...this.players.values()].map((p) => [p.id, p.cls, r2(p.x), r2(p.z), r2(p.aim), Math.round(p.hp), p.maxhp, p.lvl, p.xp, xpNext(p.lvl), Math.ceil(p.dead), p.atkN, p.ready ? 1 : 0, p.pts, STATS.map((k) => p.st[k]), p.wpn, p.arm]),
+      pl: [...this.players.values()].map((p) => [p.id, p.cls, r2(p.x), r2(p.z), r2(p.aim), Math.round(p.hp), p.maxhp, p.lvl, p.xp, xpNext(p.lvl), Math.ceil(p.dead), p.atkN, p.ready ? 1 : 0, p.pts, STATS.map((k) => p.st[k]), p.wpn, p.arm, p.up ? 1 : 0]),
       en: this.enemies.map((e) => [e.id, e.t, r2(e.x), r2(e.z), Math.max(1, Math.round((e.hp / e.max) * 100))]),
-      pr: this.projs.map((b) => [b.id, b.kind, r2(b.x), r2(b.z), r2(Math.atan2(b.vx, b.vz))]),
+      pr: this.projs.map((b) => [b.id, b.kind, r2(b.x), r2(b.z), r2(Math.atan2(b.vx, b.vz)), b.high ? 1 : 0]),
       fx,
     };
   }

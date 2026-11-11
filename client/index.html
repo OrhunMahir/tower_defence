@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kale savunma</title>
+<title>Castle Defense</title>
 <style>
   html,body{margin:0;height:100%;overflow:hidden;background:#0d1117;color:#fff;font-family:system-ui,-apple-system,sans-serif;user-select:none}
   canvas{display:block}
@@ -60,13 +60,13 @@
 <div id="top" class="hud">
   <div id="phase"></div>
   <div id="sub"></div>
-  <button id="ready" hidden>Hazırım (Boşluk)</button>
-  <div id="boss" class="panel" hidden><div class="lbl"><span>Kraliçe</span><span id="bossTxt"></span></div><div class="bar"><i id="bossBar" style="background:#ff2a6a"></i></div></div>
+  <button id="ready" hidden>Ready (Space)</button>
+  <div id="boss" class="panel" hidden><div class="lbl"><span>Queen</span><span id="bossTxt"></span></div><div class="bar"><i id="bossBar" style="background:#ff2a6a"></i></div></div>
 </div>
 <div id="left" class="hud panel">
-  <div class="lbl"><span>İç kale</span><span id="thTxt"></span></div>
+  <div class="lbl"><span>Keep</span><span id="thTxt"></span></div>
   <div class="bar"><i id="thBar" style="background:#e9b949"></i></div>
-  <div class="lbl" style="margin-top:10px"><span>Ortak altın</span><span id="gold">0</span></div>
+  <div class="lbl" style="margin-top:10px"><span>Shared gold</span><span id="gold">0</span></div>
 </div>
 <div id="team" class="hud panel"></div>
 <div id="me" class="hud panel">
@@ -77,16 +77,16 @@
   <div id="stats"></div>
 </div>
 <div id="build" class="hud panel" hidden></div>
-<div id="help" class="hud">WASD: hareket · Fare: nişan · Sol tık: saldırı<br>Boşluk: hazır · 1/2/3: sınıf değiştir (hazırlıkta) · Tekerlek: yakınlaştır</div>
+<div id="help" class="hud">WASD: move (walk into a wall to climb it) · Mouse: aim · Left click: attack<br>Space: ready · 1/2/3: change class (between waves) · Wheel: zoom</div>
 <div id="toast" class="hud"></div>
 <div id="overlay">
   <div class="box">
-    <h1 id="ovTitle">Kale savunma</h1>
-    <p id="ovText">Sınıfını seç. Dalgalar arasında değiştirebilirsin.</p>
+    <h1 id="ovTitle">Castle Defense</h1>
+    <p id="ovText">Choose your class. You can change it between waves.</p>
     <div class="classes" id="classes">
-      <button data-c="knight"><b>Şövalye</b><span>Kılıç ve kalkan. Surun dibinden ve gediklerde yakın dövüş, en yüksek can.</span></button>
-      <button data-c="archer"><b>Okçu</b><span>Yay. Surların üzerinden uzak menzil, hızlı atış, tek hedef.</span></button>
-      <button data-c="mage"><b>Büyücü</b><span>Asa. Yavaş ama patlayan büyü, alan hasarı.</span></button>
+      <button data-c="knight"><b>Knight</b><span>Sword and shield. Melee at the walls and in breaches, the most HP.</span></button>
+      <button data-c="archer"><b>Archer</b><span>Bow. Long range over the walls, fast shots, single target.</span></button>
+      <button data-c="mage"><b>Mage</b><span>Staff. Slow exploding spells, area damage.</span></button>
     </div>
   </div>
 </div>

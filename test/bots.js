@@ -39,3 +39,34 @@ export function botSpend(g, ps) {
   }
   for (const p of ps) g.addStat(p.id, ['str', 'agi', 'vit', 'crit'][p.lvl % 4]);
 }
+
+// ---- Helpers for rule tests ----
+import { Game, TICK, ENEMIES } from '../server/game.js';
+
+export function newGame(classes = ['knight'], seed = 1) {
+  const g = new Game(seeded(seed));
+  const ps = classes.map((c) => g.addPlayer(c));
+  return { g, ps, p: ps[0] };
+}
+
+// Advance the simulation; while preparing, keep the countdown from starting a wave.
+export function steps(g, n, { holdPrep = true } = {}) {
+  for (let i = 0; i < n; i++) { if (holdPrep && g.phase === 'prep') g.timer = 99; g.step(TICK); }
+}
+export const seconds = (g, s, opt) => steps(g, Math.round(s / TICK), opt);
+
+// Start wave 1 with an empty spawn queue, so a test controls every enemy itself.
+export function emptyWave(g) {
+  for (const p of g.players.values()) g.setReady(p.id);
+  g.step(TICK);
+  g.queue = [];
+  g.enemies = [];
+}
+
+export function addEnemy(g, t, x, z, { hp = ENEMIES[t].hp, cd = 99 } = {}) {
+  const e = { id: g.nextId++, t, x, z, hp, max: hp, cd };
+  g.enemies.push(e);
+  return e;
+}
+
+export const idle = { mx: 0, mz: 0, aim: 0, atk: false };

@@ -1,10 +1,29 @@
-# Kale savunma (çalışma adı)
+# Castle Defense (working title)
 
-1–4 kişilik co-op kale savunma oyunu. Sunucu oyunun bütün kurallarını yürütür; tarayıcı sadece girdi yollar ve 3B sahneyi çizer.
+A co-op castle defense game for 1–4 players in the browser. Waves of monsters attack the castle, a Queen arrives every tenth wave, and between waves the team spends shared gold on walls, archers, buildings and perks. When the keep falls, the run starts over.
 
-- `npm install` — bağımlılıklar (`ws`, `three`)
-- `npm start` — sunucu, http://127.0.0.1:3000 (ağdaki arkadaşlar için `HOST=0.0.0.0 npm start`)
-- `npm test` — bot simülasyonu ile kural testleri
-- `node server/index.js --dev` — test modu: G = 500 altın ve bir seviye, H = sıradaki dalga Kraliçe dalgası, K = iç kalenin canı 60'a iner
+The server runs every game rule; the browser only sends input and draws the 3D scene.
 
-Klasörler: `server/game.js` kurallar, `server/index.js` HTTP + WebSocket, `client/` 3B istemci, `test/` simülasyon testleri, `stil-demo.html` ilk görsel demo.
+## Run it
+
+```bash
+npm install
+npm start
+```
+
+Then open http://127.0.0.1:3000. To let others on your network join, start it with `HOST=0.0.0.0 npm start`.
+
+## Commands
+
+- `npm start` — game server and static files on port 3000 (`PORT` changes it).
+- `npm test` — rule tests, bot runs and server tests.
+- `npm run balance` — balance report: how far bot teams get and how long a run lasts.
+- `node server/index.js --dev` — testing shortcuts in the game: `G` grants 500 gold and a level, `H` makes the next wave a Queen wave, `K` drops the keep to 60 HP.
+
+## Layout
+
+- `server/game.js` — the simulation: `Game.step(dt)` and `snapshot()`, no network or timers.
+- `server/index.js` — HTTP static server and WebSocket game server.
+- `client/` — Three.js client: `models.js` builds everything that is drawn, `main.js` handles the network, input and HUD.
+- `test/` — tests and bots.
+- `stil-demo.html` — the first visual style demo.
