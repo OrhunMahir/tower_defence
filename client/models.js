@@ -125,8 +125,7 @@ function buildTower(scene, x, z) {
   mesh(new THREE.CylinderGeometry(1.9, 2.1, 6.2, 14), stoneMat(4, 2), 0, 3.1, 0, g);
   mesh(new THREE.CylinderGeometry(2.25, 2.25, 0.6, 14), stonePlain, 0, 6.3, 0, g);
   for (let i = 0; i < 8; i++) { const a = (i / 8) * PI * 2; mesh(new THREE.BoxGeometry(0.8, 0.7, 0.4), stonePlain, Math.cos(a) * 2.05, 6.95, Math.sin(a) * 2.05, g).rotation.y = -a + PI / 2; }
-  mesh(new THREE.ConeGeometry(2, 2.6, 14), roofMat(0x4a5d78, 6, 2), 0, 8.2, 0, g);
-  return g;
+  return g;   // no roof: the tower top is a fighting platform
 }
 
 function buildTownHall(scene) {
@@ -163,18 +162,6 @@ function buildMine(scene, s) {
   return g;
 }
 
-function buildSmith(scene, s) {
-  const g = new THREE.Group();
-  g.position.set(s.x, 0, s.z);
-  scene.add(g);
-  mesh(new THREE.BoxGeometry(4, 2.6, 3.4), stoneMat(1.2, 0.8), 0, 1.3, 0, g);
-  mesh(new THREE.ConeGeometry(3.3, 1.8, 4), roofMat(0x3d3d44, 3, 1.5), 0, 3.5, 0, g).rotation.y = PI / 4;
-  mesh(new THREE.BoxGeometry(0.9, 3.2, 0.9), stonePlain, 1.2, 3.4, -0.8, g);
-  mesh(new THREE.BoxGeometry(1.4, 1, 0.2), fireMat, -0.6, 0.8, 1.72, g);
-  mesh(new THREE.BoxGeometry(0.9, 0.5, 0.4), ironMat, 2.6, 0.45, 1.2, g);
-  return g;
-}
-
 function buildMortar(scene) {
   const g = new THREE.Group();
   g.position.set(...MORTAR_POS);
@@ -204,17 +191,8 @@ export function buildWorld(scene, layout) {
   const segs = layout.segs.map((s) => buildSegment(scene, s));
   const towers = layout.towers.map(([x, z]) => buildTower(scene, x, z));
   const { g: hall, flag } = buildTownHall(scene);
-  const mine = buildMine(scene, layout.spots.mine), smith = buildSmith(scene, layout.spots.smith);
+  const mine = buildMine(scene, layout.spots.mine);
   const mortar = buildMortar(scene), ballista = buildBallista(hall);
-  // Wall archers. The four tower posts shoot from inside the tower, so they get no figure.
-  const guards = layout.posts.map(([x, z, seg]) => {
-    if (seg < 0) return null;
-    const m = makeGuard();
-    m.position.set(x, WALL_H, z);
-    m.rotation.y = Math.abs(x) > Math.abs(z) ? (x > 0 ? PI / 2 : -PI / 2) : (z > 0 ? 0 : PI);
-    scene.add(m);
-    return m;
-  });
   const torches = [];
   for (const [x, y, z] of [[-3, 3.2, S + 1.2], [3, 3.2, S + 1.2], [0, 3.2, 4.4], [-S + 1.5, 3.2, 0], [S - 1.5, 3.2, 0], [0, 3.2, -S + 1.5]]) {
     const l = new THREE.PointLight(0xff8a3c, 0, 26, 2);
@@ -224,72 +202,10 @@ export function buildWorld(scene, layout) {
     mesh(new THREE.CylinderGeometry(0.06, 0.06, 1, 6), trunkMat, x, y - 0.6, z, scene);
     mesh(new THREE.SphereGeometry(0.16, 8, 6), fireMat, x, y, z, scene).castShadow = false;
   }
-  return { segs, flag, torches, towers, hall, mine, smith, mortar, ballista, guards, wallH: WALL_H };
+  return { segs, flag, torches, towers, hall, mine, mortar, ballista, wallH: WALL_H };
 }
 
-// ---- Heroes ----
-const skin = std({ color: 0xd9a273, roughness: 0.8 });
-const steel = std({ color: 0x9aa3ae, metalness: 0.85, roughness: 0.35 });
-const blade = std({ color: 0xe8edf2, metalness: 1, roughness: 0.2 });
-const leather = std({ color: 0x4a3222, roughness: 0.9 });
 export const orbMat = std({ color: 0x7fe8ff, emissive: 0x35c8ff, emissiveIntensity: 2.5 });
-const BODY = { knight: steel, archer: std({ color: 0x5b4a32, roughness: 0.85 }), mage: std({ color: 0x40305e, roughness: 0.85 }) };
-export const TEAM_COLORS = [0x2f6fd0, 0xc23b3b, 0xe0b030, 0x3d9a4a];
-
-export function makeHero(kind, color) {
-  const bodyM = BODY[kind], accM = std({ color, roughness: 0.85 }), g = new THREE.Group(), G = THREE;
-  const legs = [-1, 1].map((s) => {
-    const p = new G.Group(); p.position.set(s * 0.14, 0.85, 0); g.add(p);
-    mesh(new G.CylinderGeometry(0.11, 0.09, 0.7, 8), bodyM, 0, -0.38, 0, p);
-    mesh(new G.BoxGeometry(0.17, 0.14, 0.32), leather, 0, -0.78, 0.05, p);
-    return p;
-  });
-  if (kind === 'mage') mesh(new G.ConeGeometry(0.52, 1.3, 12), accM, 0, 0.72, 0, g);
-  mesh(new G.CylinderGeometry(0.33, 0.25, 0.72, 12), bodyM, 0, 1.22, 0, g);
-  mesh(new G.CylinderGeometry(0.275, 0.275, 0.1, 12), leather, 0, 0.9, 0, g);
-  mesh(new G.SphereGeometry(0.19, 14, 10), skin, 0, 1.8, 0, g);
-  const arms = [-1, 1].map((s) => {
-    const p = new G.Group(); p.position.set(s * 0.43, 1.5, 0); g.add(p);
-    mesh(new G.SphereGeometry(0.16, 10, 8), kind === 'knight' ? bodyM : accM, 0, 0, 0, p).scale.set(1, 0.8, 1);
-    mesh(new G.CylinderGeometry(0.085, 0.075, 0.6, 8), bodyM, 0, -0.32, 0, p);
-    mesh(new G.SphereGeometry(0.09, 8, 6), skin, 0, -0.66, 0, p);
-    return p;
-  });
-  mesh(new G.BoxGeometry(0.62, 1.05, 0.04), accM, 0, 1.0, -0.31, g).rotation.x = 0.12;
-  if (kind === 'knight') {
-    mesh(new G.BoxGeometry(0.34, 0.95, 0.04), accM, 0, 1.05, 0.3, g);
-    mesh(new G.SphereGeometry(0.23, 14, 8, 0, PI * 2, 0, PI * 0.6), steel, 0, 1.82, 0, g);
-    mesh(new G.BoxGeometry(0.05, 0.22, 0.04), steel, 0, 1.76, 0.21, g);
-    mesh(new G.ConeGeometry(0.07, 0.42, 8), accM, 0, 2.14, -0.03, g);
-    mesh(new G.BoxGeometry(0.07, 0.03, 0.95), blade, 0, -0.66, 0.56, arms[1]);
-    mesh(new G.BoxGeometry(0.3, 0.05, 0.06), leather, 0, -0.66, 0.08, arms[1]);
-    mesh(new G.CylinderGeometry(0.42, 0.42, 0.06, 6), accM, 0, -0.42, 0.17, arms[0]).rotation.x = PI / 2;
-    mesh(new G.SphereGeometry(0.09, 8, 6), steel, 0, -0.42, 0.22, arms[0]);
-    arms[0].rotation.x = -0.7;
-  } else if (kind === 'archer') {
-    mesh(new G.ConeGeometry(0.27, 0.44, 10), accM, 0, 1.99, -0.03, g);
-    mesh(new G.CylinderGeometry(0.09, 0.09, 0.6, 8), leather, 0.14, 1.35, -0.38, g).rotation.z = -0.3;
-    mesh(new G.TorusGeometry(0.55, 0.028, 6, 18, PI), leather, -0.43, 1.45, 0.7, g).rotation.set(0, -PI / 2, -PI / 2);
-    mesh(new G.CylinderGeometry(0.006, 0.006, 1.1, 4), blade, -0.43, 1.45, 0.7, g);
-    arms[0].rotation.x = -1.45;
-  } else {
-    mesh(new G.CylinderGeometry(0.38, 0.38, 0.03, 14), accM, 0, 1.93, 0, g);
-    mesh(new G.ConeGeometry(0.25, 0.62, 12), accM, 0, 2.24, 0, g);
-    mesh(new G.CylinderGeometry(0.035, 0.035, 2.1, 6), leather, 0.52, 1.05, 0.3, g);
-    mesh(new G.SphereGeometry(0.15, 12, 10), orbMat, 0.52, 2.2, 0.3, g).castShadow = false;
-  }
-  g.scale.setScalar(1.2);
-  return { g, legs, arms, kind };
-}
-
-// Per-frame hero pose. swing goes 1 -> 0 after an attack.
-export function poseHero(h, walk, swing, t) {
-  const w = Math.sin(t * 11) * 0.7 * walk;
-  h.legs[0].rotation.x = w; h.legs[1].rotation.x = -w;
-  if (h.kind === 'knight') h.arms[1].rotation.x = swing > 0 ? -2.5 + (1 - swing) * 2.7 : -0.25 - w * 0.5;
-  else if (h.kind === 'archer') h.arms[1].rotation.x = -0.9 - swing * 0.6;
-  else h.arms[1].rotation.x = -1 - swing * 1.2;
-}
 
 // ---- Monsters: geometry is merged once per type and shared by every instance ----
 const _c = new THREE.Color(), _e = new THREE.Euler(), _q = new THREE.Quaternion();
@@ -308,24 +224,49 @@ class Parts {
   build(key) { return mergeGeometries(this.groups[key]); }
 }
 
-let guardGeo = null;
-const guardMat = std({ vertexColors: true, roughness: 0.85 });
-function makeGuard() {
-  if (!guardGeo) {
-    const G = THREE, P = new Parts(), a = (geo, col, pos, rot) => P.add('g', geo, col, pos, rot);
-    for (const s of [-1, 1]) a(new G.CylinderGeometry(0.11, 0.09, 0.7, 6), 0x4a3222, [s * 0.14, 0.47, 0]);
-    a(new G.CylinderGeometry(0.33, 0.25, 0.72, 8), 0x8a2f2f, [0, 1.22, 0]);
-    a(new G.SphereGeometry(0.19, 10, 8), 0xd9a273, [0, 1.8, 0]);
-    a(new G.ConeGeometry(0.27, 0.44, 8), 0x8a2f2f, [0, 1.99, -0.03]);
-    a(new G.CylinderGeometry(0.08, 0.07, 0.6, 6), 0x8a2f2f, [-0.43, 1.45, 0.3], [-1.45, 0, 0]);
-    a(new G.CylinderGeometry(0.08, 0.07, 0.6, 6), 0x8a2f2f, [0.43, 1.2, 0]);
-    a(new G.TorusGeometry(0.55, 0.03, 5, 14, PI), 0x4a3222, [-0.43, 1.45, 0.7], [0, -PI / 2, -PI / 2]);
-    guardGeo = P.build('g');
+// ---- Defenders: one merged, vertex-coloured mesh per unit type ----
+const unitMat = std({ vertexColors: true, roughness: 0.8 });
+const unitCache = {};
+const SKIN = 0xd9a273, LEATHER = 0x4a3222, STEEL = 0xaab2bd, WOOD = 0x6b4a2a;
+function unitGeo(k) {
+  const G = THREE, P = new Parts(), a = (geo, col, pos, rot, scale) => P.add('u', geo, col, pos, rot, scale);
+  const tunic = { archer: 0x8a2f2f, spear: 0x7f8894, mage: 0x5a3fa0, crossbow: 0x2f6a3a }[k];
+  for (const s of [-1, 1]) a(new G.CylinderGeometry(0.11, 0.09, 0.7, 6), LEATHER, [s * 0.14, 0.47, 0]);
+  if (k === 'mage') a(new G.ConeGeometry(0.52, 1.3, 10), tunic, [0, 0.72, 0]);
+  a(new G.CylinderGeometry(0.33, 0.25, 0.72, 8), tunic, [0, 1.22, 0]);
+  a(new G.SphereGeometry(0.19, 10, 8), SKIN, [0, 1.8, 0]);
+  a(new G.CylinderGeometry(0.08, 0.07, 0.6, 6), tunic, [0.43, 1.2, 0]);
+  if (k === 'archer') {
+    a(new G.ConeGeometry(0.27, 0.44, 8), tunic, [0, 1.99, -0.03]);
+    a(new G.CylinderGeometry(0.08, 0.07, 0.6, 6), tunic, [-0.43, 1.45, 0.3], [-1.45, 0, 0]);
+    a(new G.TorusGeometry(0.55, 0.03, 5, 14, PI), LEATHER, [-0.43, 1.45, 0.7], [0, -PI / 2, -PI / 2]);
+  } else if (k === 'spear') {
+    a(new G.SphereGeometry(0.23, 10, 6, 0, PI * 2, 0, PI * 0.6), STEEL, [0, 1.82, 0]);
+    a(new G.CylinderGeometry(0.08, 0.07, 0.6, 6), tunic, [-0.43, 1.2, 0]);
+    a(new G.CylinderGeometry(0.035, 0.035, 3, 6), WOOD, [0.5, 1.5, 0.25], [0.35, 0, 0]);
+    a(new G.ConeGeometry(0.09, 0.4, 6), STEEL, [0.5, 3.07, 0.82], [0.35, 0, 0]);
+    a(new G.CylinderGeometry(0.4, 0.4, 0.06, 6), 0x2f4f8a, [-0.45, 1.15, 0.22], [PI / 2, 0, 0]);
+  } else if (k === 'mage') {
+    a(new G.CylinderGeometry(0.38, 0.38, 0.03, 12), tunic, [0, 1.93, 0]);
+    a(new G.ConeGeometry(0.25, 0.62, 10), tunic, [0, 2.24, 0]);
+    a(new G.CylinderGeometry(0.08, 0.07, 0.6, 6), tunic, [-0.43, 1.2, 0]);
+    a(new G.CylinderGeometry(0.035, 0.035, 2.1, 6), WOOD, [0.52, 1.05, 0.3]);
+    a(new G.SphereGeometry(0.16, 10, 8), 0x9ff2ff, [0.52, 2.2, 0.3]);
+  } else {
+    a(new G.CylinderGeometry(0.24, 0.26, 0.12, 10), LEATHER, [0, 1.98, 0]);
+    a(new G.CylinderGeometry(0.08, 0.07, 0.6, 6), tunic, [-0.43, 1.45, 0.3], [-1.45, 0, 0]);
+    a(new G.BoxGeometry(0.12, 0.1, 1.1), WOOD, [0, 1.42, 0.62]);
+    a(new G.BoxGeometry(1.0, 0.07, 0.1), STEEL, [0, 1.45, 1.05]);
   }
-  const m = new THREE.Mesh(guardGeo, guardMat);
+  return P.build('u');
+}
+export function makeUnit(k) {
+  const m = new THREE.Mesh((unitCache[k] ??= unitGeo(k)), unitMat);
   m.castShadow = true;
+  m.scale.setScalar(1.15);
   return m;
 }
+export const TOWER_TOP = 6.6;
 
 const HIDE = [0x3b3f47, 0x4b403a, 0x2b2233], BONE = 0xd8cdb4;
 export const GLOW = [0xff5a1a, 0xff8a1a, 0xff2a6a];

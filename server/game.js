@@ -1,58 +1,57 @@
 // Pure game simulation: no network and no timers. step(dt) advances the world,
 // snapshot() returns what clients need to draw it. The server owns all rules.
+//
+// Players are commanders, not characters: between waves they pick one of two
+// offered waves, recruit defenders for the walls and upgrade the castle with
+// shared gold. Battles play out on their own.
 
 export const TICK = 1 / 20;
 export const S = 14;            // half-size of the castle square
 const SEG = 4;                  // wall segment length
 const WALL_T = 0.7;             // wall half-thickness
-const TH_HALF = 3.5;            // town hall half-size
+const TH_HALF = 3.5;            // keep half-size
 const TOWER_R = 2.1;
-const OVER_TIME = 8, RESPAWN = 5;
-
-export const CLASSES = {
-  knight: { hp: 140, speed: 7, cd: 0.45, dmg: 32, range: 3.2, arc: 2.2 },
-  archer: { hp: 90, speed: 7.6, cd: 0.5, dmg: 18, proj: { kind: 0, speed: 34, ttl: 1.1, r: 0.35 } },
-  mage: { hp: 80, speed: 7, cd: 0.95, dmg: 24, proj: { kind: 1, speed: 22, ttl: 1.4, r: 0.45, aoe: 3 } },
-};
+const OVER_TIME = 8;
+const START_GOLD = 100;
 
 export const ENEMIES = [
-  { name: 'runner', hp: 30, speed: 4.4, dmg: 6, r: 0.6, xp: 8, gold: 3, wallMul: 1 },
-  { name: 'brute', hp: 150, speed: 2.3, dmg: 16, r: 1.0, xp: 30, gold: 12, wallMul: 2.5 },
-  { name: 'queen', hp: 1800, speed: 1.6, dmg: 45, r: 2.4, xp: 400, gold: 250, wallMul: 3 },
+  { name: 'runner', hp: 30, speed: 4.4, dmg: 6, r: 0.6, gold: 4, wallMul: 1, points: 1 },
+  { name: 'brute', hp: 150, speed: 2.3, dmg: 16, r: 1.0, gold: 15, wallMul: 2.5, points: 4 },
+  { name: 'queen', hp: 1800, speed: 1.6, dmg: 45, r: 2.4, gold: 250, wallMul: 3, points: 0 },
 ];
+
+// Defenders. `kind` is the projectile look; melee units strike directly.
+export const UNITS = {
+  archer: { cost: 30, dmg: 10, cd: 1.4, range: 19, kind: 2, speed: 40 },
+  spear: { cost: 25, dmg: 18, cd: 1.0, range: 4.5, melee: true },
+  mage: { cost: 70, dmg: 14, cd: 2.4, range: 17, kind: 1, speed: 24, aoe: 3 },
+  crossbow: { cost: 85, dmg: 55, cd: 3.0, range: 25, kind: 4, speed: 55, tough: true },
+};
+export const UNIT_KEYS = Object.keys(UNITS);
+const COST_GROWTH = 1.08;
+// PROMOTE[tier] is the price of raising every unit of one type from that tier to the next.
+// Tier t+1 needs barracks level t. Each tier adds 35% damage.
+export const PROMOTE = [0, 120, 260, 520, 1000];       // each unit of a type makes the next one this much dearer
 
 // cost[level] is the price of going from that level to the next one.
 export const BUILDINGS = {
   hall: { start: 1, max: 5, cost: [0, 100, 250, 500, 900] },
   walls: { start: 1, max: 5, cost: [0, 60, 150, 300, 550] },
-  archers: { start: 1, max: 5, cost: [0, 80, 200, 400, 700] },
+  barracks: { start: 1, max: 5, cost: [0, 80, 200, 400, 700] },
   mine: { start: 0, max: 5, cost: [80, 120, 220, 380, 600] },
-  smith: { start: 0, max: 5, cost: [100, 180, 320, 520, 800] },
 };
-// Buildings that only exist (and block movement) once they are built.
-const SPOTS = { mine: { x: 8.5, z: -7, hw: 2, hd: 2 }, smith: { x: -8.5, z: 5.5, hw: 2.2, hd: 1.9 } };
-// Wall archers per archer level. Posts fill in order: corner towers, side centres, then the rest.
-const ARCHER_COUNT = [0, 4, 6, 8, 12, 16];
-const POST_ORDER = [[0, S], [0, -S], [S, 0], [-S, 0], [-8, S], [8, S], [-8, -S], [8, -S], [S, -8], [S, 8], [-S, -8], [-S, 8]];
-// One of three random perks is offered each time the town hall is upgraded. Perks stack.
+export const CAPACITY = [0, 10, 16, 22, 28, 32];   // defenders the walls can hold, by wall level
+const SPOTS = { mine: { x: 8.5, z: -7, hw: 2, hd: 2 } };
+// One of three random perks is offered each time the keep is upgraded. Perks stack.
 export const PERKS = ['mortar', 'ballista', 'happy', 'sharp', 'rapid', 'masons'];
 const MORTAR_R = 3.5;
-// Hero growth: one stat point per level, gear tiers bought with shared gold at the blacksmith.
-export const STATS = ['str', 'agi', 'vit', 'crit'];
-const STAT_MAX = 20;
-// GEAR[kind][tier] is the price of going from that tier to the next; tier t+1 needs blacksmith level t.
-export const GEAR = { wpn: [0, 60, 140, 280, 500], arm: [0, 50, 120, 240, 420] };
-const CASTLE_XP_SHARE = 0.4;   // every hero earns this share of XP for kills made by archers and engines
-const heroMaxHp = (p) => CLASSES[p.cls].hp + 15 * p.st.vit;
-const WALL_RANGE = 1.3;        // shots fired from the top of a wall fly this much further
+const REPAIR_HP_PER_GOLD = 20;
 const thMax = (l) => 1500 + 600 * (l - 1);
 const wallMul = (l) => 1 + 0.5 * (l - 1);
-const REPAIR_HP_PER_GOLD = 20;
 
 const TOWERS = [[-S, -S], [S, -S], [-S, S], [S, S]];
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const r2 = (v) => Math.round(v * 100) / 100;
-export const xpNext = (lvl) => Math.round(40 * lvl ** 1.5);
 
 function buildSegs() {
   const segs = [];
@@ -93,7 +92,7 @@ function pushOutCircle(e, r, cx, cz, cr) {
 export class Game {
   constructor(rng = Math.random) {
     this.rng = rng;
-    this.players = new Map();
+    this.players = new Set();
     this.nextId = 1;
     this.reset();
   }
@@ -102,36 +101,30 @@ export class Game {
     this.wave = 0;
     this.phase = 'prep';
     this.timer = 0;
-    this.gold = 0;
+    this.gold = START_GOLD;
     this.b = Object.fromEntries(Object.entries(BUILDINGS).map(([k, d]) => [k, d.start]));
     this.th = { hp: thMax(1), max: thMax(1) };
     this.segs = buildSegs();
+    // A slot is a place a defender can stand: the four towers, then every wall segment.
+    this.slots = [...TOWERS.map(([x, z]) => ({ x, z, seg: -1 })), ...this.segs.map((s, i) => ({ x: s.x, z: s.z, seg: i }))];
+    this.units = [0, 1, 2, 3].map((slot) => ({ slot, k: 'archer', cd: 0 }));
+    this.tiers = Object.fromEntries(UNIT_KEYS.map((k) => [k, 1]));
     this.enemies = [];
     this.projs = [];
     this.fx = [];
     this.queue = [];
     this.spawnT = 0;
     this.spawnGap = 1;
-    this.posts = [...TOWERS.map(([x, z]) => ({ x, z, seg: -1 })), ...POST_ORDER.map(([x, z]) => ({ x, z, seg: this.segs.findIndex((s) => s.x === x && s.z === z) }))];
-    this.archerCd = this.posts.map(() => 0);
+    this.reached = 0;
+    this.hpMul = 1;
+    this.dmgMul = 1;
+    this.reward = 0;
     this.perks = Object.fromEntries(PERKS.map((k) => [k, 0]));
     this.offer = null;
     this.shells = [];
     this.mortarCd = 0;
     this.ballistaCd = 0;
-    this.reached = 0;
-    this.hpMul = 1;
-    this.dmgMul = 1;
-    let i = 0;
-    for (const p of this.players.values()) this.resetPlayer(p, i++);
-  }
-
-  resetPlayer(p, slot = 0) {
-    p.lvl = 1; p.xp = 0; p.pts = 0; p.wpn = 1; p.arm = 1;
-    p.st = { str: 0, agi: 0, vit: 0, crit: 0 };
-    p.maxhp = heroMaxHp(p); p.hp = p.maxhp;
-    p.x = (slot - 1.5) * 1.2; p.z = 6.5; p.aim = 0;
-    p.cd = 0; p.dead = 0; p.atkN = 0; p.ready = false; p.up = false;
+    this.makeWaveOffers();
   }
 
   layout() {
@@ -141,20 +134,19 @@ export class Game {
       towers: TOWERS,
       thHalf: TH_HALF,
       spots: SPOTS,
-      posts: this.posts.map((p) => [p.x, p.z, p.seg]),
-      archerCount: ARCHER_COUNT,
-      perks: PERKS,
+      slots: this.slots.map((p) => [p.x, p.z, p.seg]),
       buildings: BUILDINGS,
-      gear: GEAR,
+      units: UNIT_KEYS,
+      promote: PROMOTE,
+      capacity: CAPACITY,
+      perks: PERKS,
     };
   }
 
-  addPlayer(cls) {
-    if (!Object.hasOwn(CLASSES, cls)) cls = 'knight';
-    const p = { id: this.nextId++, cls, in: { mx: 0, mz: 0, aim: 0, atk: false } };
-    this.resetPlayer(p, this.players.size);
-    this.players.set(p.id, p);
-    return p;
+  addPlayer() {
+    const id = this.nextId++;
+    this.players.add(id);
+    return id;
   }
 
   removePlayer(id) {
@@ -162,62 +154,109 @@ export class Game {
     if (this.players.size === 0) this.reset();
   }
 
-  setInput(id, m) {
-    const p = this.players.get(id);
-    if (!p) return;
-    const num = (v) => (Number.isFinite(v) ? v : 0);
-    p.in.mx = clamp(num(m.mx), -1, 1);
-    p.in.mz = clamp(num(m.mz), -1, 1);
-    p.in.aim = num(m.aim);
-    p.in.atk = !!m.atk;
+  // ---- Waves: two offers, the commanders pick one ----
+
+  // Both offers are built from the same budget; one is harder and pays double.
+  // The first leans towards a swarm of runners, the second towards brutes.
+  makeWaveOffers() {
+    const n = this.wave + 1;
+    const budget = 5 + 3 * n + (n >= 3 ? (n - 2) * 3.2 : 0);
+    const hardMul = 1.5 + this.rng() * 0.4, hardFirst = this.rng() < 0.5;
+    this.waves = [0, 1].map((i) => {
+      const hard = hardFirst ? i === 0 : i === 1, pts = budget * (hard ? hardMul : 1);
+      const heavy = n < 2 ? 0 : i === 0 ? this.rng() * 0.25 : 0.35 + this.rng() * 0.35;
+      const brutes = Math.round((pts * heavy) / ENEMIES[1].points);
+      const runners = Math.max(3, Math.round(pts * (1 - heavy)));
+      const queens = n % 10 === 0 ? (hard && n >= 20 ? 2 : 1) : 0;
+      return { c: [runners, brutes, queens], gold: (40 + 15 * n) * (hard ? 2 : 1), hard };
+    });
   }
 
-  setReady(id) {
-    const p = this.players.get(id);
-    if (p && this.phase === 'prep') p.ready = true;
-  }
-
-  // Class can only change between waves; level and XP are kept.
-  setClass(id, cls) {
-    const p = this.players.get(id);
-    if (!p || !Object.hasOwn(CLASSES, cls) || this.phase !== 'prep') return;
-    p.cls = cls;
-    p.maxhp = heroMaxHp(p);
-    p.hp = p.maxhp;
-  }
-
-  // Stat points are personal and can be spent at any time.
-  addStat(id, key) {
-    const p = this.players.get(id);
-    if (!p || !STATS.includes(key) || p.pts <= 0 || p.st[key] >= STAT_MAX) return false;
-    p.pts--; p.st[key]++;
-    if (key === 'vit') { p.maxhp += 15; if (p.dead <= 0) p.hp += 15; }
+  chooseWave(id, i) {
+    if (this.phase !== 'prep' || !this.players.has(id) || !Number.isInteger(i) || !this.waves[i]) return false;
+    this.startWave(this.waves[i]);
     return true;
   }
 
-  buyGear(id, kind) {
-    const p = this.players.get(id);
-    if (!p || !Object.hasOwn(GEAR, kind) || this.phase !== 'prep') return false;
-    const t = p[kind];
-    if (t >= GEAR[kind].length || this.b.smith < t || this.gold < GEAR[kind][t]) return false;
-    this.gold -= GEAR[kind][t];
-    p[kind] = t + 1;
-    return true;
-  }
-
-  giveXp(p, amount) {
-    p.xp += amount;
-    while (p.xp >= xpNext(p.lvl)) {
-      p.xp -= xpNext(p.lvl); p.lvl++; p.pts++;
-      if (p.dead <= 0) p.hp = p.maxhp;
-      this.fx.push([2, r2(p.x), r2(p.z), p.id]);
+  startWave(offer) {
+    const n = ++this.wave;
+    this.phase = 'wave';
+    this.reward = offer.gold;
+    const types = [];
+    offer.c.slice(0, 2).forEach((count, t) => { for (let i = 0; i < count; i++) types.push(t); });
+    for (let i = types.length - 1; i > 0; i--) {
+      const j = Math.floor(this.rng() * (i + 1));
+      [types[i], types[j]] = [types[j], types[i]];
     }
+    for (let q = 0; q < offer.c[2]; q++) types.splice(Math.floor(types.length * 0.4), 0, 2);
+    const dirs = [];
+    for (let i = 1 + (n >= 4) + (n >= 8); i > 0; i--) dirs.push(this.rng() * Math.PI * 2);
+    this.hpMul = 1.09 ** (n - 1);
+    this.dmgMul = 1 + 0.04 * (n - 1);
+    this.queue = types.map((t) => ({ t, a: dirs[Math.floor(this.rng() * dirs.length)] + (this.rng() - 0.5) * 0.7 }));
+    this.spawnGap = Math.max(0.15, 0.9 - n * 0.05);
+    this.spawnT = 0;
+    this.waves = [];
   }
 
-  // Anyone may spend the shared gold, but only between waves.
+  spawn({ t, a }) {
+    const d = ENEMIES[t], dist = 52 + this.rng() * 8;
+    // The queen grows more slowly than the horde, so later boss waves stay winnable.
+    const hp = Math.round(d.hp * (t === 2 ? this.hpMul ** 0.6 : this.hpMul));
+    this.enemies.push({ id: this.nextId++, t, x: Math.sin(a) * dist, z: Math.cos(a) * dist, hp, max: hp, cd: this.rng() });
+  }
+
+  endWave() {
+    this.phase = 'prep';
+    this.gold += Math.round((this.reward + 25 * this.b.mine) * (1 + 0.5 * this.perks.happy));
+    this.projs = [];
+    this.shells = [];
+    this.makeWaveOffers();
+  }
+
+  // ---- Spending shared gold: anyone may, but only between waves ----
+
+  unitCost(k) {
+    return Math.round(UNITS[k].cost * COST_GROWTH ** this.units.filter((u) => u.k === k).length);
+  }
+
+  // A new defender takes the free slot furthest from everyone else, so the walls fill evenly.
+  freeSlot(k) {
+    const used = new Set(this.units.map((u) => u.slot));
+    let best = -1, bd = -1;
+    this.slots.forEach((s, i) => {
+      if (used.has(i) || (UNITS[k].melee && s.seg < 0)) return;
+      let d = Infinity;
+      for (const u of this.units) { const o = this.slots[u.slot]; d = Math.min(d, Math.hypot(o.x - s.x, o.z - s.z)); }
+      if (d > bd) { bd = d; best = i; }
+    });
+    return best;
+  }
+
+  recruit(id, k) {
+    if (!Object.hasOwn(UNITS, k) || this.phase !== 'prep' || !this.players.has(id)) return false;
+    if (this.units.length >= CAPACITY[this.b.walls]) return false;
+    const cost = this.unitCost(k), slot = this.freeSlot(k);
+    if (this.gold < cost || slot < 0) return false;
+    this.gold -= cost;
+    this.units.push({ slot, k, cd: 0 });
+    this.fx.push([8, this.slots[slot].x, this.slots[slot].z, k]);
+    return true;
+  }
+
+  promote(id, k) {
+    if (!Object.hasOwn(UNITS, k) || this.phase !== 'prep' || !this.players.has(id)) return false;
+    const t = this.tiers[k];
+    if (t >= PROMOTE.length || this.b.barracks < t || this.gold < PROMOTE[t]) return false;
+    this.gold -= PROMOTE[t];
+    this.tiers[k] = t + 1;
+    this.fx.push([9, 0, 0, k]);
+    return true;
+  }
+
   upgrade(id, key) {
     const d = BUILDINGS[key];
-    if (!d || !Object.hasOwn(BUILDINGS, key) || this.phase !== 'prep' || !this.players.has(id)) return false;
+    if (!Object.hasOwn(BUILDINGS, key) || this.phase !== 'prep' || !this.players.has(id)) return false;
     const l = this.b[key];
     if (l >= d.max || (key !== 'hall' && l >= this.b.hall) || this.gold < d.cost[l]) return false;
     if (key === 'hall' && this.offer) return false;   // pick the pending perk first
@@ -259,6 +298,8 @@ export class Game {
     return true;
   }
 
+  // ---- Simulation ----
+
   step(dt) {
     if (this.players.size === 0) return;
     if (this.phase === 'over') {
@@ -266,174 +307,50 @@ export class Game {
       if (this.timer <= 0) this.reset();
       return;
     }
-    if (this.phase === 'prep') {
-      // No countdown: the wave starts when every player is ready.
-      let allReady = true;
-      for (const p of this.players.values()) if (!p.ready) allReady = false;
-      if (allReady) this.startWave();
-    } else {
-      this.spawnT -= dt;
-      while (this.spawnT <= 0 && this.queue.length) { this.spawn(this.queue.pop()); this.spawnT += this.spawnGap; }
-      this.updateEnemies(dt);
-      this.updateArchers(dt);
-      this.updateEngines(dt);
-    }
-    this.updatePlayers(dt);
+    if (this.phase !== 'wave') return;   // preparation has no clock: it lasts until a wave is chosen
+    this.spawnT -= dt;
+    while (this.spawnT <= 0 && this.queue.length) { this.spawn(this.queue.pop()); this.spawnT += this.spawnGap; }
+    this.updateEnemies(dt);
+    this.updateUnits(dt);
+    this.updateEngines(dt);
     this.updateProjs(dt);
-    if (this.phase === 'wave') {
-      this.enemies = this.enemies.filter((e) => e.hp > 0);
-      if (this.th.hp <= 0) {
-        this.th.hp = 0; this.phase = 'over'; this.timer = OVER_TIME; this.reached = this.wave;
-      } else if (!this.queue.length && !this.enemies.length) this.endWave();
-    }
+    this.enemies = this.enemies.filter((e) => e.hp > 0);
+    if (this.th.hp <= 0) {
+      this.th.hp = 0; this.phase = 'over'; this.timer = OVER_TIME; this.reached = this.wave;
+    } else if (!this.queue.length && !this.enemies.length) this.endWave();
   }
 
-  startWave() {
-    const n = ++this.wave, mul = 0.6 + 0.4 * this.players.size;
-    this.phase = 'wave';
-    for (const p of this.players.values()) p.ready = false;
-    const types = [];
-    for (let i = Math.round((5 + 3 * n) * mul); i > 0; i--) types.push(0);
-    if (n >= 3) for (let i = Math.round((n - 2) * 0.8 * mul); i > 0; i--) types.push(1);
-    for (let i = types.length - 1; i > 0; i--) {
-      const j = Math.floor(this.rng() * (i + 1));
-      [types[i], types[j]] = [types[j], types[i]];
-    }
-    if (n % 10 === 0) types.splice(Math.floor(types.length * 0.6), 0, 2);
-    const dirs = [];
-    for (let i = 1 + (n >= 4) + (n >= 8); i > 0; i--) dirs.push(this.rng() * Math.PI * 2);
-    this.hpMul = 1.09 ** (n - 1);
-    this.dmgMul = 1 + 0.04 * (n - 1);
-    this.queue = types.map((t) => ({ t, a: dirs[Math.floor(this.rng() * dirs.length)] + (this.rng() - 0.5) * 0.7 }));
-    this.spawnGap = Math.max(0.15, 0.9 - n * 0.05);
-    this.spawnT = 0;
-  }
-
-  spawn({ t, a }) {
-    const d = ENEMIES[t], dist = 52 + this.rng() * 8;
-    // The queen grows more slowly than the horde, so later boss waves stay winnable.
-    const hp = Math.round(d.hp * (t === 2 ? this.hpMul ** 0.6 * (0.6 + 0.4 * this.players.size) : this.hpMul));
-    this.enemies.push({ id: this.nextId++, t, x: Math.sin(a) * dist, z: Math.cos(a) * dist, hp, max: hp, cd: this.rng() });
-  }
-
-  endWave() {
-    this.phase = 'prep';
-    this.timer = 0;
-    this.gold += Math.round((25 + 8 * this.wave + 25 * this.b.mine) * (1 + 0.5 * this.perks.happy));
-    this.shells = [];
-    this.projs = [];
-    let i = 0;
-    for (const p of this.players.values()) {
-      if (p.dead > 0) { p.dead = 0; p.hp = p.maxhp; p.x = (i - 1.5) * 1.2; p.z = 6.5; }
-      i++;
-    }
-  }
-
-  collideStatic(e, r, isEnemy) {
-    let hit = null;
-    for (const s of this.segs) {
-      if (s.hp <= 0 || !isEnemy) continue;   // heroes climb onto the walls instead of bumping into them
-      if (pushOutBox(e, r, s.x, s.z, s.hw, s.hd)) hit = s;
-    }
-    for (const [tx, tz] of TOWERS) pushOutCircle(e, r, tx, tz, TOWER_R);
-    for (const k in SPOTS) if (this.b[k] > 0) pushOutBox(e, r, SPOTS[k].x, SPOTS[k].z, SPOTS[k].hw, SPOTS[k].hd);
-    const th = pushOutBox(e, r, 0, 0, TH_HALF, TH_HALF);
-    return { seg: hit, th };
-  }
-
-  updatePlayers(dt) {
-    for (const p of this.players.values()) {
-      if (p.dead > 0) {
-        p.dead -= dt;
-        if (p.dead <= 0) { p.dead = 0; p.hp = p.maxhp; p.x = 0; p.z = 6.5; }
-        continue;
-      }
-      const c = CLASSES[p.cls];
-      let { mx, mz } = p.in;
-      const len = Math.hypot(mx, mz);
-      if (len > 1) { mx /= len; mz /= len; }
-      const sp = c.speed * (1 + 0.03 * p.st.agi);
-      p.x += mx * sp * dt; p.z += mz * sp * dt;
-      this.collideStatic(p, 0.5, false);
-      // Defenders never leave the castle, even through a breach. The outer band is the wall walk.
-      p.x = clamp(p.x, -S - 0.3, S + 0.3); p.z = clamp(p.z, -S - 0.3, S + 0.3);
-      p.up = this.segs.some((s) => s.hp > 0 && Math.abs(p.x - s.x) <= s.hw + 0.1 && Math.abs(p.z - s.z) <= s.hd + 0.1);
-      p.aim = p.in.aim;
-      p.cd -= dt;
-      if (p.in.atk && p.cd <= 0) { p.cd = c.cd / (1 + 0.06 * p.st.agi); p.atkN++; this.attack(p, c); }
-    }
-  }
-
-  attack(p, c) {
-    const crit = this.rng() < 0.05 * p.st.crit ? 2 : 1;
-    const dmg = c.dmg * (1 + 0.08 * p.st.str) * (1 + 0.35 * (p.wpn - 1)) * crit;
-    const sx = Math.sin(p.aim), sz = Math.cos(p.aim);
-    if (c.proj) {
-      this.projs.push({
-        id: this.nextId++, kind: c.proj.kind, x: p.x + sx * 0.8, z: p.z + sz * 0.8,
-        vx: sx * c.proj.speed, vz: sz * c.proj.speed, ttl: c.proj.ttl * (p.up ? WALL_RANGE : 1), high: p.up, r: c.proj.r, aoe: c.proj.aoe || 0, dmg, owner: p.id,
-      });
-      return;
-    }
-    for (const e of this.enemies) {
-      const dx = e.x - p.x, dz = e.z - p.z, d = Math.hypot(dx, dz), er = ENEMIES[e.t].r;
-      if (d > c.range + er) continue;
-      let da = Math.atan2(dx, dz) - p.aim;
-      da = Math.atan2(Math.sin(da), Math.cos(da));
-      if (d < er + 0.8 || Math.abs(da) <= c.arc / 2) this.hurtEnemy(e, dmg, p.id);
-    }
-  }
-
-  hurtEnemy(e, dmg, ownerId) {
+  hurtEnemy(e, dmg) {
     if (e.hp <= 0) return;
     e.hp -= dmg;
     if (e.hp > 0) return;
-    const d = ENEMIES[e.t];
-    this.gold += d.gold;
+    this.gold += ENEMIES[e.t].gold;
     this.fx.push([0, r2(e.x), r2(e.z), e.t]);
-    const p = this.players.get(ownerId);
-    if (p) this.giveXp(p, d.xp);
-    else for (const q of this.players.values()) this.giveXp(q, Math.round(d.xp * CASTLE_XP_SHARE));
   }
 
-  updateProjs(dt) {
-    const keep = [];
-    for (const b of this.projs) {
-      let hit = null;
-      for (let i = 0; i < 2 && !hit; i++) {
-        b.x += b.vx * dt * 0.5; b.z += b.vz * dt * 0.5;
-        for (const e of this.enemies) {
-          if (e.hp > 0 && Math.hypot(e.x - b.x, e.z - b.z) < b.r + ENEMIES[e.t].r) { hit = e; break; }
-        }
+  // Defenders on the walls. A unit is out of action while its wall segment is down.
+  updateUnits(dt) {
+    const train = 1 + 0.25 * (this.b.barracks - 1), haste = 1 + 0.2 * this.perks.rapid;
+    for (const u of this.units) {
+      const post = this.slots[u.slot], d = UNITS[u.k];
+      u.cd -= dt;
+      if (u.cd > 0 || (post.seg >= 0 && this.segs[post.seg].hp <= 0)) continue;
+      let best = null, bd = Infinity, bh = 0;
+      for (const e of this.enemies) {
+        const q = Math.hypot(e.x - post.x, e.z - post.z);
+        if (q > d.range + ENEMIES[e.t].r) continue;
+        if (d.tough ? e.hp > bh : q < bd) { best = e; bd = q; bh = e.hp; }
       }
-      b.ttl -= dt;
-      if (!hit && b.ttl > 0) { keep.push(b); continue; }
-      if (b.aoe) {
-        this.fx.push([1, r2(b.x), r2(b.z), b.aoe]);
-        for (const e of this.enemies) if (Math.hypot(e.x - b.x, e.z - b.z) < b.aoe + ENEMIES[e.t].r) this.hurtEnemy(e, b.dmg, b.owner);
-      } else if (hit) this.hurtEnemy(hit, b.dmg, b.owner);
-    }
-    this.projs = keep;
-  }
-
-  // Wall archers: one per manned post, silent while their wall segment is down.
-  updateArchers(dt) {
-    const l = this.b.archers, n = ARCHER_COUNT[l];
-    const dmg = (9 + 3 * (l - 1)) * (1 + 0.3 * this.perks.sharp), gap = 1.5 / (1 + 0.2 * this.perks.rapid), range = 18 + l;
-    for (let i = 0; i < n; i++) {
-      const post = this.posts[i];
-      this.archerCd[i] -= dt;
-      if (this.archerCd[i] > 0 || (post.seg >= 0 && this.segs[post.seg].hp <= 0)) continue;
-      let best = null, bd = range;
-      for (const e of this.enemies) { const d = Math.hypot(e.x - post.x, e.z - post.z); if (d < bd) { bd = d; best = e; } }
       if (!best) continue;
-      this.archerCd[i] = gap * (0.9 + this.rng() * 0.2);
-      const dx = (best.x - post.x) / bd, dz = (best.z - post.z) / bd;
-      this.projs.push({ id: this.nextId++, kind: 2, x: post.x + dx, z: post.z + dz, vx: dx * 40, vz: dz * 40, ttl: 0.75, r: 0.4, aoe: 0, dmg, owner: 0 });
+      u.cd = (d.cd / haste) * (0.9 + this.rng() * 0.2);
+      const dmg = d.dmg * train * (1 + 0.35 * (this.tiers[u.k] - 1)) * (u.k === 'archer' ? 1 + 0.3 * this.perks.sharp : 1);
+      if (d.melee) { this.hurtEnemy(best, dmg); this.fx.push([7, r2(best.x), r2(best.z), 0]); continue; }
+      const dist = Math.hypot(best.x - post.x, best.z - post.z) || 1, dx = (best.x - post.x) / dist, dz = (best.z - post.z) / dist;
+      this.projs.push({ id: this.nextId++, kind: d.kind, x: post.x + dx, z: post.z + dz, vx: dx * d.speed, vz: dz * d.speed, ttl: (d.range / d.speed) * 1.2, r: 0.4, aoe: d.aoe || 0, dmg });
     }
   }
 
-  // Perk weapons chosen on town hall upgrades.
+  // Perk weapons chosen on keep upgrades.
   updateEngines(dt) {
     if (this.perks.mortar) {
       this.mortarCd -= dt;
@@ -460,7 +377,7 @@ export class Game {
     for (const sh of this.shells) {
       if (sh.t > 0) continue;
       this.fx.push([1, r2(sh.x), r2(sh.z), MORTAR_R]);
-      for (const e of this.enemies) if (Math.hypot(e.x - sh.x, e.z - sh.z) < MORTAR_R + ENEMIES[e.t].r) this.hurtEnemy(e, 40 * this.perks.mortar, 0);
+      for (const e of this.enemies) if (Math.hypot(e.x - sh.x, e.z - sh.z) < MORTAR_R + ENEMIES[e.t].r) this.hurtEnemy(e, 40 * this.perks.mortar);
     }
     this.shells = this.shells.filter((sh) => sh.t > 0);
     if (this.perks.ballista) {
@@ -471,29 +388,55 @@ export class Game {
         if (best) {
           this.ballistaCd = 3;
           const d = Math.hypot(best.x, best.z) || 1;
-          this.projs.push({ id: this.nextId++, kind: 4, x: 0, z: 0, vx: (best.x / d) * 60, vz: (best.z / d) * 60, ttl: 0.6, r: 0.6, aoe: 0, dmg: 120 * this.perks.ballista, owner: 0 });
+          this.projs.push({ id: this.nextId++, kind: 4, x: 0, z: 0, vx: (best.x / d) * 60, vz: (best.z / d) * 60, ttl: 0.6, r: 0.6, aoe: 0, dmg: 120 * this.perks.ballista });
         }
       }
     }
   }
 
+  updateProjs(dt) {
+    const keep = [];
+    for (const b of this.projs) {
+      let hit = null;
+      for (let i = 0; i < 2 && !hit; i++) {
+        b.x += b.vx * dt * 0.5; b.z += b.vz * dt * 0.5;
+        for (const e of this.enemies) {
+          if (e.hp > 0 && Math.hypot(e.x - b.x, e.z - b.z) < b.r + ENEMIES[e.t].r) { hit = e; break; }
+        }
+      }
+      b.ttl -= dt;
+      if (!hit && b.ttl > 0) { keep.push(b); continue; }
+      if (b.aoe) {
+        this.fx.push([1, r2(b.x), r2(b.z), b.aoe]);
+        for (const e of this.enemies) if (Math.hypot(e.x - b.x, e.z - b.z) < b.aoe + ENEMIES[e.t].r) this.hurtEnemy(e, b.dmg);
+      } else if (hit) this.hurtEnemy(hit, b.dmg);
+    }
+    this.projs = keep;
+  }
+
+  collideStatic(e, r) {
+    let hit = null;
+    for (const s of this.segs) if (s.hp > 0 && pushOutBox(e, r, s.x, s.z, s.hw, s.hd)) hit = s;
+    for (const [tx, tz] of TOWERS) pushOutCircle(e, r, tx, tz, TOWER_R);
+    for (const k in SPOTS) if (this.b[k] > 0) pushOutBox(e, r, SPOTS[k].x, SPOTS[k].z, SPOTS[k].hw, SPOTS[k].hd);
+    const th = pushOutBox(e, r, 0, 0, TH_HALF, TH_HALF);
+    return { seg: hit, th };
+  }
+
+  // Monsters walk at the keep, break whatever wall is in the way and pour through breaches.
   updateEnemies(dt) {
     const breaches = this.segs.filter((s) => s.hp <= 0);
-    const alive = [...this.players.values()].filter((p) => p.dead <= 0);
     const es = this.enemies;
     for (const e of es) {
       const d = ENEMIES[e.t];
-      let tx = 0, tz = 0, prey = null, pd = 9;
-      for (const p of alive) { const q = Math.hypot(p.x - e.x, p.z - e.z); if (q < pd) { pd = q; prey = p; } }
-      if (prey) { tx = prey.x; tz = prey.z; }
-      else if (Math.abs(e.x) > S - 1 || Math.abs(e.z) > S - 1) {
+      let tx = 0, tz = 0;
+      if (Math.abs(e.x) > S - 1 || Math.abs(e.z) > S - 1) {
         let bd = 14;
         for (const s of breaches) { const q = Math.hypot(s.x - e.x, s.z - e.z); if (q < bd) { bd = q; tx = s.x; tz = s.z; } }
+        if (bd < 1.5) { tx = 0; tz = 0; }   // standing in the breach: carry on to the keep
       }
       const dx = tx - e.x, dz = tz - e.z, len = Math.hypot(dx, dz);
-      const reach = prey && pd <= d.r + 1.1;
-      if (len > 0.01 && !reach) { e.x += (dx / len) * d.speed * dt; e.z += (dz / len) * d.speed * dt; }
-      e.prey = prey; e.reach = reach;
+      if (len > 0.01) { e.x += (dx / len) * d.speed * dt; e.z += (dz / len) * d.speed * dt; }
     }
     for (let i = 0; i < es.length; i++) {
       const a = es[i], ar = ENEMIES[a.t].r;
@@ -501,22 +444,18 @@ export class Game {
         const b = es[j], min = (ar + ENEMIES[b.t].r) * 0.9;
         const dx = b.x - a.x, dz = b.z - a.z, d2 = dx * dx + dz * dz;
         if (d2 >= min * min || d2 < 1e-9) continue;
-        const dist = Math.sqrt(d2), push = (min - dist) / 2, wa = a.t >= b.t ? 0.3 : 0.7;
-        a.x -= (dx / dist) * push * wa * 2; a.z -= (dz / dist) * push * wa * 2;
-        b.x += (dx / dist) * push * (1 - wa) * 2; b.z += (dz / dist) * push * (1 - wa) * 2;
+        const dist = Math.sqrt(d2), push = min - dist, wa = a.t >= b.t ? 0.3 : 0.7;
+        a.x -= (dx / dist) * push * wa; a.z -= (dz / dist) * push * wa;
+        b.x += (dx / dist) * push * (1 - wa); b.z += (dz / dist) * push * (1 - wa);
       }
     }
     for (const e of es) {
       const d = ENEMIES[e.t];
-      const c = this.collideStatic(e, d.r, true);
+      const c = this.collideStatic(e, d.r);
       const nearTH = c.th || (Math.abs(e.x) < TH_HALF + d.r + 0.4 && Math.abs(e.z) < TH_HALF + d.r + 0.4);
       e.cd -= dt;
       if (e.cd > 0) continue;
-      if (e.reach && e.prey.dead <= 0) {
-        e.cd = 1;
-        e.prey.hp -= d.dmg * this.dmgMul * (1 - 0.12 * (e.prey.arm - 1));
-        if (e.prey.hp <= 0) { e.prey.hp = 0; e.prey.dead = RESPAWN; this.fx.push([3, r2(e.prey.x), r2(e.prey.z), e.prey.id]); }
-      } else if (nearTH) { e.cd = 1; this.th.hp -= d.dmg * this.dmgMul; }
+      if (nearTH) { e.cd = 1; this.th.hp -= d.dmg * this.dmgMul; }
       else if (c.seg) { e.cd = 1; c.seg.hp = Math.max(0, c.seg.hp - d.dmg * this.dmgMul * d.wallMul); }
     }
   }
@@ -527,15 +466,19 @@ export class Game {
     return {
       t: 's', ph: this.phase, wave: this.wave, tm: Math.ceil(this.timer), gold: this.gold,
       th: [Math.round(this.th.hp), this.th.max], reached: this.reached,
-      left: this.queue.length + this.enemies.length,
+      left: this.queue.length + this.enemies.length, np: this.players.size,
       b: Object.keys(BUILDINGS).map((k) => this.b[k]),
       rc: [this.repairCost('walls'), this.repairCost('hall')],
       pk: PERKS.map((k) => this.perks[k]),
       of: this.offer,
+      wv: this.waves,
+      un: this.units.map((u) => [u.slot, UNIT_KEYS.indexOf(u.k)]),
+      cap: CAPACITY[this.b.walls],
+      uc: UNIT_KEYS.map((k) => this.unitCost(k)),
+      ut: UNIT_KEYS.map((k) => this.tiers[k]),
       sg: this.segs.map((s) => Math.round((s.hp / s.max) * 100)),
-      pl: [...this.players.values()].map((p) => [p.id, p.cls, r2(p.x), r2(p.z), r2(p.aim), Math.round(p.hp), p.maxhp, p.lvl, p.xp, xpNext(p.lvl), Math.ceil(p.dead), p.atkN, p.ready ? 1 : 0, p.pts, STATS.map((k) => p.st[k]), p.wpn, p.arm, p.up ? 1 : 0]),
       en: this.enemies.map((e) => [e.id, e.t, r2(e.x), r2(e.z), Math.max(1, Math.round((e.hp / e.max) * 100))]),
-      pr: this.projs.map((b) => [b.id, b.kind, r2(b.x), r2(b.z), r2(Math.atan2(b.vx, b.vz)), b.high ? 1 : 0]),
+      pr: this.projs.map((b) => [b.id, b.kind, r2(b.x), r2(b.z), r2(Math.atan2(b.vx, b.vz))]),
       fx,
     };
   }

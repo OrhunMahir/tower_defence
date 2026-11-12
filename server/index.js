@@ -4,7 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
-import { Game, TICK, xpNext } from './game.js';
+import { randomInt } from 'node:crypto';
+import { Game, TICK } from './game.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MOUNTS = [
@@ -13,6 +14,7 @@ const MOUNTS = [
 ];
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json' };
 export const MAX_PLAYERS = 4;
+const MAX_ROOMS = 200;
 
 function serveStatic(req, res) {
   const notFound = () => { res.writeHead(404); res.end('Not found'); };
@@ -33,46 +35,77 @@ function serveStatic(req, res) {
   notFound();
 }
 
-// Starts a game server. `dev` enables testing shortcuts that clients can trigger.
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+const newCode = () => Array.from({ length: 4 }, () => CODE_CHARS[randomInt(CODE_CHARS.length)]).join('');
+
+// Starts a game server. Every room is its own game: a solo room holds one commander,
+// a co-op room up to four who share a four-letter code. `dev` enables testing shortcuts.
 export function start({ port = 3000, host = '127.0.0.1', dev = false } = {}) {
   const server = http.createServer(serveStatic);
-  const game = new Game();
+  const rooms = new Map();
   const wss = new WebSocketServer({ server, maxPayload: 2048 });
 
+  function openRoom(solo) {
+    if (rooms.size >= MAX_ROOMS) return null;
+    let code;
+    do code = solo ? `solo-${randomInt(1e9)}` : newCode(); while (rooms.has(code));
+    const room = { code, solo, game: new Game(), clients: new Set() };
+    rooms.set(code, room);
+    return room;
+  }
+
   wss.on('connection', (ws) => {
-    let player = null;
+    let room = null, id = null;
+    const reply = (m) => ws.send(JSON.stringify(m));
     ws.on('error', () => {});
     ws.on('message', (raw) => {
       let m;
       try { m = JSON.parse(raw); } catch { return; }
       if (!m || typeof m !== 'object') return;
-      if (m.t === 'join' && !player) {
-        if (game.players.size >= MAX_PLAYERS) { ws.send(JSON.stringify({ t: 'full' })); ws.close(); return; }
-        player = game.addPlayer(m.cls);
-        ws.send(JSON.stringify({ t: 'hello', id: player.id, layout: game.layout() }));
-      } else if (!player) return;
-      else if (m.t === 'in') game.setInput(player.id, m);
-      else if (m.t === 'ready') game.setReady(player.id);
-      else if (m.t === 'cls') game.setClass(player.id, m.cls);
-      else if (m.t === 'up') game.upgrade(player.id, m.b);
-      else if (m.t === 'repair') game.repair(player.id, m.what);
-      else if (m.t === 'perk') game.choosePerk(player.id, m.k);
-      else if (m.t === 'stat') game.addStat(player.id, m.k);
-      else if (m.t === 'gear') game.buyGear(player.id, m.k);
+      if (m.t === 'join' && !room) {
+        let r;
+        if (m.mode === 'join') {
+          r = rooms.get(String(m.code || '').toUpperCase().slice(0, 8));
+          if (!r || r.solo) return reply({ t: 'err', why: 'noroom' });
+          if (r.clients.size >= MAX_PLAYERS) return reply({ t: 'err', why: 'full' });
+        } else {
+          r = openRoom(m.mode !== 'create');
+          if (!r) return reply({ t: 'err', why: 'busy' });
+        }
+        room = r;
+        room.clients.add(ws);
+        id = room.game.addPlayer();
+        reply({ t: 'hello', id, room: room.solo ? null : room.code, layout: room.game.layout() });
+        return;
+      }
+      if (!room) return;
+      const game = room.game;
+      if (m.t === 'wave') game.chooseWave(id, m.i);
+      else if (m.t === 'buy') game.recruit(id, m.k);
+      else if (m.t === 'promote') game.promote(id, m.k);
+      else if (m.t === 'up') game.upgrade(id, m.b);
+      else if (m.t === 'repair') game.repair(id, m.what);
+      else if (m.t === 'perk') game.choosePerk(id, m.k);
       else if (m.t === 'dev' && dev) {
-        if (m.k === 'gold') { game.gold += 500; game.giveXp(player, xpNext(player.lvl)); }
-        else if (m.k === 'boss' && game.phase === 'prep') game.wave = Math.floor(game.wave / 10) * 10 + 9;
+        if (m.k === 'gold') game.gold += 500;
+        else if (m.k === 'boss' && game.phase === 'prep') { game.wave = Math.floor(game.wave / 10) * 10 + 9; game.makeWaveOffers(); }
         else if (m.k === 'hurt') game.th.hp = Math.min(game.th.hp, 60);
       }
     });
-    ws.on('close', () => { if (player) game.removePlayer(player.id); });
+    ws.on('close', () => {
+      if (!room) return;
+      room.clients.delete(ws);
+      room.game.removePlayer(id);
+      if (!room.clients.size) rooms.delete(room.code);
+    });
   });
 
   const timer = setInterval(() => {
-    game.step(TICK);
-    if (!game.players.size) return;
-    const msg = JSON.stringify(game.snapshot());
-    for (const c of wss.clients) if (c.readyState === 1) c.send(msg);
+    for (const room of rooms.values()) {
+      room.game.step(TICK);
+      const msg = JSON.stringify(room.game.snapshot());
+      for (const c of room.clients) if (c.readyState === 1) c.send(msg);
+    }
   }, TICK * 1000);
 
   const ready = new Promise((resolve) => server.listen(port, host, () => resolve(server.address().port)));
@@ -81,7 +114,7 @@ export function start({ port = 3000, host = '127.0.0.1', dev = false } = {}) {
     for (const c of wss.clients) c.terminate();
     wss.close(() => server.close(() => resolve()));
   });
-  return { server, game, ready, close };
+  return { server, rooms, ready, close };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

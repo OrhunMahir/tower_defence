@@ -1,28 +1,32 @@
-// Client: sends input, draws whatever the server says. No game rules live here.
+// Client: sends the commander's choices, draws whatever the server says. No game rules live here.
 import * as THREE from 'three';
-import { buildWorld, makeHero, poseHero, makeBeast, hAt, winMat, fireMat, orbMat, TEAM_COLORS, GLOW, BEAST_SCALE, MORTAR_POS, BALLISTA_POS } from './models.js';
+import { buildWorld, makeUnit, makeBeast, hAt, winMat, fireMat, orbMat, GLOW, BEAST_SCALE, MORTAR_POS, TOWER_TOP } from './models.js';
 
 const $ = (id) => document.getElementById(id);
-const CLASS_TR = { knight: 'Knight', archer: 'Archer', mage: 'Mage' };
 const SNAP_MS = 50;
-const B_KEYS = ['hall', 'walls', 'archers', 'mine', 'smith'];
-const B_TR = {
-  hall: ['Keep', '+600 HP · caps every other level · a perk choice per level'],
-  walls: ['Walls', '+50% wall and gate HP, taller walls'],
-  archers: ['Archers', 'More archers on the walls, more damage'],
-  mine: ['Gold mine', '+25 gold after every wave'],
-  smith: ['Blacksmith', 'Unlocks higher weapon and armor tiers'],
+const MONSTERS = [['Runner', 'Runners'], ['Brute', 'Brutes'], ['Queen', 'Queens']];
+const UNIT_TXT = {
+  archer: ['Archer', 'Fast shots at the nearest monster'],
+  spear: ['Spearman', 'Stabs monsters at the foot of his wall'],
+  mage: ['Mage', 'Exploding orbs, area damage'],
+  crossbow: ['Crossbowman', 'Slow heavy bolts at the toughest monster'],
 };
-const STAT_TR = [['str', 'Strength', '+8% damage'], ['agi', 'Agility', '+6% attack speed, +3% movement'], ['vit', 'Vitality', '+15 HP'], ['crit', 'Crit', '+5% chance of double damage']];
-const GEAR_TR = [['wpn', 'Weapon', '+35% damage per tier', 15], ['arm', 'Armor', '-12% damage taken per tier', 16]];
-const P_TR = {
+const B_KEYS = ['hall', 'walls', 'barracks', 'mine'];
+const B_TXT = {
+  hall: ['Keep', '+600 HP · caps every other level · a perk choice per level'],
+  walls: ['Walls', '+50% wall HP · room for more defenders'],
+  barracks: ['Barracks', '+25% damage for all defenders · unlocks promotions'],
+  mine: ['Gold mine', '+25 gold after every wave'],
+};
+const P_TXT = {
   mortar: ['Mortar', 'Lobs exploding shells into the thickest crowd'],
   ballista: ['Ballista', 'Fires heavy bolts at the toughest monster'],
   happy: ['Happy citizens', '+50% income after each wave'],
-  sharp: ['Sharp arrows', 'Wall archers deal +30% damage'],
-  rapid: ['Rapid bows', 'Wall archers shoot 20% faster'],
+  sharp: ['Sharp arrows', 'Archers deal +30% damage'],
+  rapid: ['Rapid reload', 'All defenders attack 20% faster'],
   masons: ['Master masons', 'Repairs cost 40% less'],
 };
+const ERRORS = { noroom: 'No room with that code.', full: 'That room is full (4 commanders).', busy: 'The server is full. Try again later.' };
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -40,7 +44,7 @@ const hemi = new THREE.HemisphereLight(0xcfe4ff, 0x4a5a30, 1.2);
 const sun = new THREE.DirectionalLight(0xfff1d6, 6.5);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-Object.assign(sun.shadow.camera, { left: -55, right: 55, top: 55, bottom: -55, near: 1, far: 260 });
+Object.assign(sun.shadow.camera, { left: -60, right: 60, top: 60, bottom: -60, near: 1, far: 280 });
 sun.shadow.bias = -0.0006;
 sun.shadow.normalBias = 0.05;
 scene.add(hemi, sun, sun.target);
@@ -64,42 +68,51 @@ function updateLook(target, k) {
   if (world) for (const l of world.torches) l.intensity = look.tor;
 }
 
-let ws = null, myId = null, world = null, layout = null, snap = null, snapAt = 0;
-const players = new Map(), enemies = new Map(), projs = new Map(), fxs = [];
+let ws = null, joined = false, world = null, layout = null, snap = null, snapAt = 0;
+const enemies = new Map(), projs = new Map(), units = new Map(), fxs = [];
 
-function connect(cls) {
-  ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`);
-  ws.onopen = () => send({ t: 'join', cls });
-  ws.onmessage = (ev) => {
+// ---- Start menu and connection ----
+function connect(mode, code) {
+  $('ovErr').textContent = '';
+  if (ws) ws.close();
+  const sock = ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`);
+  sock.onopen = () => send({ t: 'join', mode, code });
+  sock.onmessage = (ev) => {
     const m = JSON.parse(ev.data);
-    if (m.t === 'hello') { myId = m.id; layout = m.layout; world = buildWorld(scene, layout); }
-    else if (m.t === 's' && world) onSnap(m);
-    else if (m.t === 'full') showOverlay('Room full', 'Up to 4 players can join.');
+    if (m.t === 'hello') {
+      joined = true; layout = m.layout; world = buildWorld(scene, layout);
+      $('overlay').hidden = true;
+      for (const id of ['left', 'help']) $(id).hidden = false;
+      $('roomRow').hidden = !m.room;
+      $('roomCode').textContent = m.room || '';
+    } else if (m.t === 's' && world) onSnap(m);
+    else if (m.t === 'err') $('ovErr').textContent = ERRORS[m.why] || 'Could not join.';
   };
-  ws.onclose = () => { if (myId) showOverlay('Connection lost', 'Reload the page to reconnect.'); };
+  sock.onclose = () => {
+    if (sock !== ws || !joined) return;
+    $('ovTitle').textContent = 'Connection lost';
+    $('ovText').textContent = 'Reload the page to start again.';
+    $('menu').hidden = true; $('overlay').hidden = false;
+  };
 }
 const send = (m) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(m)); };
-
-function showOverlay(title, text) {
-  $('ovTitle').textContent = title; $('ovText').textContent = text;
-  $('classes').hidden = true; $('overlay').hidden = false;
-}
-for (const b of document.querySelectorAll('#classes button')) b.onclick = () => { $('overlay').hidden = true; connect(b.dataset.c); };
+$('playSolo').onclick = () => connect('solo');
+$('playCreate').onclick = () => connect('create');
+$('playJoin').onsubmit = (e) => { e.preventDefault(); const code = $('code').value.trim(); if (code) connect('join', code); else $('ovErr').textContent = 'Enter a room code.'; };
 
 let toastTimer = 0;
 function toast(text, ms = 1600) {
   $('toast').textContent = text; $('toast').style.opacity = 1;
   clearTimeout(toastTimer);
-  if (ms) toastTimer = setTimeout(() => { $('toast').style.opacity = 0; }, ms);
+  toastTimer = setTimeout(() => { $('toast').style.opacity = 0; }, ms);
 }
 
-// Remember where the entity was drawn, so the next snapshot is blended in without a jump.
+// Remember where an entity was drawn, so the next snapshot is blended in without a jump.
 function track(o, x, z) { o.px = o.rx ?? x; o.pz = o.rz ?? z; o.cx = x; o.cz = z; }
 function place(o, a) { o.rx = o.px + (o.cx - o.px) * a; o.rz = o.pz + (o.cz - o.pz) * a; }
 function lerpAngle(a, b, k) { const d = Math.atan2(Math.sin(b - a), Math.cos(b - a)); return a + d * Math.min(1, k); }
 
 const barMat = new THREE.SpriteMaterial({ color: 0xe5484d, depthTest: false });
-const ringGeo = new THREE.RingGeometry(0.75, 0.95, 28).rotateX(-Math.PI / 2);
 const arrowGeo = new THREE.CylinderGeometry(0.035, 0.035, 1.2, 5).rotateX(Math.PI / 2);
 const arrowMat = new THREE.MeshStandardMaterial({ color: 0xd8c9a0, roughness: 0.6 });
 const orbGeo = new THREE.SphereGeometry(0.3, 12, 10);
@@ -109,29 +122,30 @@ const haloGeo = new THREE.TorusGeometry(1, 0.07, 6, 28).rotateX(Math.PI / 2);
 function onSnap(m) {
   const prevPhase = snap && snap.ph;
   snap = m; snapAt = performance.now();
+  const [bHall, bWalls, , bMine] = m.b, grow = 1 + 0.12 * (bWalls - 1), towerGrow = 1 + 0.1 * (bWalls - 1);
 
+  m.sg.forEach((v, i) => { const g = world.segs[i]; g.visible = v > 0; g.scale.y = (0.55 + 0.45 * (v / 100)) * grow; });
+  for (const g of world.towers) g.scale.y = towerGrow;
+  world.hall.scale.y = 1 + 0.08 * (bHall - 1);
+  world.mine.visible = bMine > 0;
+  world.mortar.visible = m.pk[0] > 0; world.ballista.visible = m.pk[1] > 0;
+
+  // Defenders stand on their slot: a tower top or a wall segment.
   const seen = new Set();
-  m.pl.forEach((row, slot) => {
-    const [id, cls, x, z, aim, , , , , , dead, atkN] = row;
-    seen.add(id);
-    let o = players.get(id);
-    if (!o) {
-      o = { id, rot: aim, swing: 0, atkN };
-      o.ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: id === myId ? 0xffffff : TEAM_COLORS[slot % 4], transparent: true, opacity: 0.75, depthTest: false }));
-      o.ring.renderOrder = 5;
-      scene.add(o.ring);
-      players.set(id, o);
+  for (const [slot, ki] of m.un) {
+    seen.add(slot);
+    const [x, z, seg] = layout.slots[slot], k = layout.units[ki];
+    let o = units.get(slot);
+    if (!o || o.k !== k) {
+      if (o) scene.remove(o.m);
+      o = { k, x, z, m: makeUnit(k), rot: Math.atan2(x, z) };
+      scene.add(o.m);
+      units.set(slot, o);
     }
-    if (o.cls !== cls) {
-      if (o.h) scene.remove(o.h.g);
-      o.cls = cls; o.h = makeHero(cls, TEAM_COLORS[slot % 4]);
-      scene.add(o.h.g);
-    }
-    if (atkN !== o.atkN) { o.swing = 1; o.atkN = atkN; }
-    o.aim = aim; o.dead = dead; o.row = row;
-    track(o, x, z);
-  });
-  for (const [id, o] of players) if (!seen.has(id)) { scene.remove(o.h.g, o.ring); players.delete(id); }
+    o.m.visible = seg < 0 || m.sg[seg] > 0;
+    o.m.position.set(x, seg < 0 ? TOWER_TOP * towerGrow : world.wallH * grow * (0.55 + 0.45 * (m.sg[seg] / 100)), z);
+  }
+  for (const [slot, o] of units) if (!seen.has(slot)) { scene.remove(o.m); units.delete(slot); }
 
   seen.clear();
   let boss = null;
@@ -144,20 +158,21 @@ function onSnap(m) {
       enemies.set(id, o);
     }
     o.hp = hp;
-    if (t === 2) boss = hp;
+    if (t === 2) boss = Math.max(boss ?? 0, hp);
     else if (hp < 100 && !o.bar) { o.bar = new THREE.Sprite(barMat); scene.add(o.bar); }
     track(o, x, z);
   }
   for (const [id, o] of enemies) if (!seen.has(id)) { scene.remove(o.g); if (o.bar) scene.remove(o.bar); enemies.delete(id); }
 
   seen.clear();
-  for (const [id, kind, x, z, ang, high] of m.pr) {
+  for (const [id, kind, x, z, ang] of m.pr) {
     seen.add(id);
     let o = projs.get(id);
     if (!o) {
-      o = { m: new THREE.Mesh(kind === 1 ? orbGeo : arrowGeo, kind === 1 ? orbMat : arrowMat), y: kind === 2 ? 4 : kind === 4 ? 5 : high ? 5 : 1.5 };
+      o = { m: new THREE.Mesh(kind === 1 ? orbGeo : arrowGeo, kind === 1 ? orbMat : arrowMat), y: kind === 4 ? 4.5 : 4 };
       o.m.rotation.y = ang;
-      if (kind === 4) { o.m.scale.setScalar(2.4); world.ballista.rotation.y = ang; }
+      if (kind === 4) o.m.scale.setScalar(2.2);
+      if (kind === 4 && Math.hypot(x, z) < 4) world.ballista.rotation.y = ang;
       scene.add(o.m);
       projs.set(id, o);
     }
@@ -168,186 +183,144 @@ function onSnap(m) {
   for (const [kind, x, z, v] of m.fx) {
     if (kind === 0) addFx(puffGeo, GLOW[v], x, 0.8 * BEAST_SCALE[v], z, BEAST_SCALE[v] * 1.3, 0.35);
     else if (kind === 1) addFx(puffGeo, 0x6fdcff, x, 1, z, v, 0.3);
-    else if (kind === 2) { addFx(haloGeo, 0xffd75a, x, 0.3, z, 1.3, 0.9, 3); if (v === myId) toast('Level up · 1 stat point'); }
-    else if (kind === 3) addFx(puffGeo, 0xe5484d, x, 1, z, 1.6, 0.5);
-    else if (kind === 4) toast(`${B_TR[v][0]} upgraded`);
+    else if (kind === 4) toast(`${B_TXT[v][0]} upgraded`);
     else if (kind === 5) addFx(orbGeo, 0x222222, MORTAR_POS[0], 2, MORTAR_POS[2], 1.6, v, 0, [x, z]);
-    else if (kind === 6) toast(`New perk: ${P_TR[v][0]}`);
+    else if (kind === 6) toast(`New perk: ${P_TXT[v][0]}`);
+    else if (kind === 7) addFx(puffGeo, 0xffffff, x, 1, z, 0.7, 0.15);
+    else if (kind === 8) addFx(haloGeo, 0xffd75a, x, world.wallH * grow, z, 1.2, 0.8, 3);
+    else if (kind === 9) toast(`${UNIT_TXT[v][0]} promoted`);
   }
-
-  const [bHall, bWalls, bArchers, bMine, bSmith] = m.b, grow = 1 + 0.12 * (bWalls - 1);
-  m.sg.forEach((v, i) => { const g = world.segs[i]; g.visible = v > 0; g.scale.y = (0.55 + 0.45 * (v / 100)) * grow; });
-  world.grow = grow;
-  for (const g of world.towers) g.scale.y = 1 + 0.1 * (bWalls - 1);
-  world.hall.scale.y = 1 + 0.08 * (bHall - 1);
-  world.mine.visible = bMine > 0; world.smith.visible = bSmith > 0;
-  world.mortar.visible = m.pk[0] > 0; world.ballista.visible = m.pk[1] > 0;
-  world.guards.forEach((g, i) => {
-    if (!g) return;
-    g.visible = i < layout.archerCount[bArchers] && m.sg[layout.posts[i][2]] > 0;
-    g.position.y = world.wallH * grow * (0.55 + 0.45 * (m.sg[layout.posts[i][2]] / 100));
-  });
   if (prevPhase !== m.ph && m.ph === 'wave') toast(m.wave % 10 === 0 ? `Wave ${m.wave} · The Queen is coming` : `Wave ${m.wave}`);
+  if (prevPhase === 'wave' && m.ph === 'prep') toast(`Wave ${m.wave} cleared`);
   updateHud(m, boss);
 }
 
 function addFx(geo, color, x, y, z, size, dur, rise = 0, to = null) {
   const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.7, depthWrite: false }));
   m.position.set(x, y, z);
-  scene.add(m);
   if (to) { m.material.opacity = 1; m.scale.setScalar(size); }
+  scene.add(m);
   fxs.push({ m, t: 0, dur, size, rise, to, from: [x, z] });
 }
 
+// ---- HUD ----
 const pct = (a, b) => `${Math.max(0, Math.min(100, (a / b) * 100))}%`;
+const plural = (n, [one, many]) => `${n} ${n === 1 ? one : many}`;
 function updateHud(m, boss) {
-  const me = players.get(myId), row = me && me.row;
   if (m.ph === 'prep') {
-    const next = m.wave + 1;
     $('phase').textContent = 'Preparation';
-    $('sub').textContent = `Next: wave ${next}${next % 10 === 0 ? ' (Queen)' : ''}${row && row[12] && m.pl.length > 1 ? ' · You are ready, waiting for the others' : ''}`;
+    $('sub').textContent = m.wave ? `Wave ${m.wave} cleared · take your time` : 'Recruit, upgrade, then choose a wave';
   } else if (m.ph === 'wave') {
     $('phase').textContent = `Wave ${m.wave}`;
-    $('sub').textContent = `${m.left} ${m.left === 1 ? 'monster' : 'monsters'} left`;
+    $('sub').textContent = `${plural(m.left, ['monster', 'monsters'])} left`;
   } else {
     $('phase').textContent = 'The castle has fallen';
     $('sub').textContent = `You reached wave ${m.reached} · restarting in ${m.tm} s`;
   }
-  $('ready').hidden = !(m.ph === 'prep' && row && !row[12]);
   $('boss').hidden = boss === null;
-  if (boss !== null) { $('bossBar').style.width = `${boss}%`; $('bossTxt').textContent = `%${boss}`; }
+  if (boss !== null) { $('bossBar').style.width = `${boss}%`; $('bossTxt').textContent = `${boss}%`; }
   $('thBar').style.width = pct(m.th[0], m.th[1]);
   $('thTxt').textContent = `${m.th[0]} / ${m.th[1]}`;
   $('gold').textContent = m.gold;
-  renderBuild(m);
-  $('team').replaceChildren(...m.pl.map((r) => {
-    const d = document.createElement('div'), a = document.createElement('span'), b = document.createElement('span');
-    a.textContent = `${CLASS_TR[r[1]]}${r[0] === myId ? ' (you)' : ''}`;
-    b.textContent = r[10] ? `${r[10]} s` : `Lv ${r[7]} · ${r[5]} HP`;
-    d.append(a, b);
-    return d;
-  }));
-  if (!row) return;
-  $('meName').textContent = CLASS_TR[row[1]];
-  $('hpTxt').textContent = `${row[5]} / ${row[6]}`;
-  $('hpBar').style.width = pct(row[5], row[6]);
-  $('lvl').textContent = `Level ${row[7]}`;
-  $('xpTxt').textContent = `${row[8]} / ${row[9]} XP`;
-  $('xpBar').style.width = pct(row[8], row[9]);
-  if (row[10]) toast(`Respawning in ${row[10]}`, 700);
-  const sig = JSON.stringify([row[13], row[14], row[15], row[16]]);
-  if (sig === statSig) return;
-  statSig = sig;
-  $('stats').innerHTML = `<div class="lbl"><span>Weapon T${row[15]} · Armor T${row[16]}</span><span>${row[13] ? `${row[13]} stat ${row[13] === 1 ? 'point' : 'points'}` : ''}</span></div>`
-    + STAT_TR.map(([k, n, d], i) => `<button data-stat="${k}" title="${d}" ${row[13] ? '' : 'disabled'}>${n} ${row[14][i]}${row[13] ? ' +' : ''}</button>`).join('');
+  $('army').textContent = `${m.un.length} / ${m.cap}`;
+  $('roomPlayers').textContent = plural(m.np, ['commander', 'commanders']);
+  renderWaves(m);
+  renderShop(m);
 }
 
-// ---- Build panel: upgrades, repairs and the perk choice ----
-let buildSig = '', statSig = '';
-$('stats').onclick = (e) => { const b = e.target.closest('button'); if (b && !b.disabled) send({ t: 'stat', k: b.dataset.stat }); };
-function renderBuild(m) {
+let wavesSig = '', shopSig = '';
+function renderWaves(m) {
+  const sig = JSON.stringify([m.ph, m.wv, m.wave]);
+  if (sig === wavesSig) return;
+  wavesSig = sig;
+  const show = m.ph === 'prep' && m.wv.length === 2;
+  $('waves').hidden = !show;
+  if (!show) return;
+  $('waves').innerHTML = `<h3>Wave ${m.wave + 1}: choose what to face</h3><div class="cards">${m.wv.map((w, i) => {
+    const mons = w.c.map((n, t) => (n ? `<b>${n}</b> ${MONSTERS[t][n === 1 ? 0 : 1]}` : '')).filter(Boolean).join('<br>');
+    return `<button class="${w.hard ? 'hard' : ''}" data-wave="${i}"><span class="tag">${w.hard ? 'Harder · double reward' : 'Standard'}</span><div class="mons">${mons}</div><div class="gold">Reward: ${w.gold} gold</div></button>`;
+  }).join('')}</div>`;
+}
+$('waves').onclick = (e) => { const b = e.target.closest('button'); if (b) send({ t: 'wave', i: Number(b.dataset.wave) }); };
+
+function renderShop(m) {
   const prep = m.ph === 'prep', show = prep || (m.of && m.ph !== 'over');
-  const me = players.get(myId), r = me && me.row;
-  const sig = JSON.stringify([show, prep, m.b, m.rc, m.pk, m.of, m.gold, r && r[15], r && r[16]]);
-  if (sig === buildSig) return;
-  buildSig = sig;
-  $('build').hidden = !show;
+  const sig = JSON.stringify([show, prep, m.b, m.rc, m.pk, m.of, m.gold, m.uc, m.ut, m.un.length, m.cap]);
+  if (sig === shopSig) return;
+  shopSig = sig;
+  $('shop').hidden = !show;
   if (!show) return;
   let h = '';
   if (m.of) {
     h += '<h3>Choose a perk</h3>';
-    for (const k of m.of) h += `<button class="row perk" data-perk="${k}"><b>${P_TR[k][0]}</b><span>${P_TR[k][1]}</span></button>`;
+    for (const k of m.of) h += `<button class="perk" data-perk="${k}"><b>${P_TXT[k][0]}</b><span>${P_TXT[k][1]}</span></button>`;
   }
   if (prep) {
+    const full = m.un.length >= m.cap, counts = layout.units.map((_, i) => m.un.filter((u) => u[1] === i).length);
+    h += `<h3>Recruit · ${m.un.length} / ${m.cap} on the walls</h3>`;
+    layout.units.forEach((k, i) => {
+      const t = m.ut[i], pc = layout.promote[t];
+      let pLabel = `Promote · ${pc}`, pOff = m.gold < pc || !counts[i];
+      if (t >= layout.promote.length) { pLabel = 'Top tier'; pOff = true; }
+      else if (m.b[2] < t) { pLabel = `Barracks Lv ${t}`; pOff = true; }
+      h += `<div class="row"><div><b>${UNIT_TXT[k][0]} <i>×${counts[i]} · tier ${t}</i></b><span>${UNIT_TXT[k][1]}</span></div><div class="btns"><button data-buy="${k}" ${full || m.gold < m.uc[i] ? 'disabled' : ''}>${full ? 'Walls full' : `Recruit · ${m.uc[i]}`}</button><button class="alt" data-promote="${k}" ${pOff ? 'disabled' : ''}>${pLabel}</button></div></div>`;
+    });
     h += '<h3>Castle</h3>';
     B_KEYS.forEach((k, i) => {
       const l = m.b[i], d = layout.buildings[k], cost = d.cost[l];
-      let label = `${l ? '' : 'Build · '}${cost} gold`, off = m.gold < cost;
+      let label = `${l ? 'Upgrade' : 'Build'} · ${cost}`, off = m.gold < cost;
       if (l >= d.max) { label = 'Max level'; off = true; }
-      else if (k !== 'hall' && l >= m.b[0]) { label = `Needs keep Lv ${l + 1}`; off = true; }
-      else if (k === 'hall' && m.of) { label = 'Choose a perk first'; off = true; }
-      h += `<div class="row"><div><b>${B_TR[k][0]} <i>${l ? `Lv ${l}` : 'not built'}</i></b><span>${B_TR[k][1]}</span></div><button data-up="${k}" ${off ? 'disabled' : ''}>${label}</button></div>`;
+      else if (k !== 'hall' && l >= m.b[0]) { label = `Keep Lv ${l + 1}`; off = true; }
+      else if (k === 'hall' && m.of) { label = 'Pick a perk first'; off = true; }
+      h += `<div class="row"><div><b>${B_TXT[k][0]} <i>${l ? `Lv ${l}` : 'not built'}</i></b><span>${B_TXT[k][1]}</span></div><button data-up="${k}" ${off ? 'disabled' : ''}>${label}</button></div>`;
     });
     if (m.rc[0] > 0) h += `<div class="row"><div><b>Repair walls</b></div><button data-repair="walls" ${m.gold ? '' : 'disabled'}>${m.rc[0]} gold</button></div>`;
     if (m.rc[1] > 0) h += `<div class="row"><div><b>Repair keep</b></div><button data-repair="hall" ${m.gold ? '' : 'disabled'}>${m.rc[1]} gold</button></div>`;
   }
-  if (prep && r) {
-    h += '<h3>Blacksmith</h3>';
-    if (!m.b[4]) h += '<p>Build the blacksmith to buy weapons and armor.</p>';
-    else for (const [kind, name, desc, idx] of GEAR_TR) {
-      const t = r[idx], costs = layout.gear[kind];
-      let label = `${costs[t]} gold`, off = m.gold < costs[t];
-      if (t >= costs.length) { label = 'Max tier'; off = true; }
-      else if (m.b[4] < t) { label = `Needs blacksmith Lv ${t}`; off = true; }
-      h += `<div class="row"><div><b>${name} <i>Tier ${t}</i></b><span>${desc}</span></div><button data-gear="${kind}" ${off ? 'disabled' : ''}>${label}</button></div>`;
-    }
-  }
-  const owned = layout.perks.map((k, i) => (m.pk[i] ? `${P_TR[k][0]}${m.pk[i] > 1 ? ` ×${m.pk[i]}` : ''}` : '')).filter(Boolean);
+  const owned = layout.perks.map((k, i) => (m.pk[i] ? `${P_TXT[k][0]}${m.pk[i] > 1 ? ` ×${m.pk[i]}` : ''}` : '')).filter(Boolean);
   if (owned.length) h += `<p>Perks: ${owned.join(', ')}</p>`;
-  $('build').innerHTML = h;
+  const y = $('shop').scrollTop;
+  $('shop').innerHTML = h;
+  $('shop').scrollTop = y;
 }
-$('build').onclick = (e) => {
+$('shop').onclick = (e) => {
   const b = e.target.closest('button');
   if (!b || b.disabled) return;
-  if (b.dataset.up) send({ t: 'up', b: b.dataset.up });
-  else if (b.dataset.repair) send({ t: 'repair', what: b.dataset.repair });
-  else if (b.dataset.perk) send({ t: 'perk', k: b.dataset.perk });
-  else if (b.dataset.gear) send({ t: 'gear', k: b.dataset.gear });
+  const d = b.dataset;
+  if (d.buy) send({ t: 'buy', k: d.buy });
+  else if (d.promote) send({ t: 'promote', k: d.promote });
+  else if (d.up) send({ t: 'up', b: d.up });
+  else if (d.repair) send({ t: 'repair', what: d.repair });
+  else if (d.perk) send({ t: 'perk', k: d.perk });
 };
 
-// ---- Input ----
-const keys = new Set(), mouse = new THREE.Vector2(), ray = new THREE.Raycaster(), aimPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -1), aimPt = new THREE.Vector3();
-let mouseDown = false, localAim = 0, zoom = 1;
+// ---- Camera and keys ----
+const keys = new Set(), focus = new THREE.Vector3(0, 0, 4);
+let zoom = 1;
 addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
   keys.add(e.code);
-  if (e.code === 'Space') { e.preventDefault(); send({ t: 'ready' }); }
+  if (e.code === 'Digit1' || e.code === 'Digit2') send({ t: 'wave', i: e.code === 'Digit1' ? 0 : 1 });
   const dev = { KeyG: 'gold', KeyH: 'boss', KeyK: 'hurt' }[e.code];   // only honoured by a server started with --dev
   if (dev) send({ t: 'dev', k: dev });
-  const cls = { Digit1: 'knight', Digit2: 'archer', Digit3: 'mage' }[e.code];
-  if (cls) send({ t: 'cls', cls });
 });
 addEventListener('keyup', (e) => keys.delete(e.code));
-addEventListener('blur', () => { keys.clear(); mouseDown = false; });
-addEventListener('mousemove', (e) => mouse.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1));
-renderer.domElement.addEventListener('mousedown', (e) => { if (e.button === 0) mouseDown = true; });
-addEventListener('mouseup', () => { mouseDown = false; });
-addEventListener('contextmenu', (e) => e.preventDefault());
-addEventListener('wheel', (e) => { zoom = Math.min(1.5, Math.max(0.4, zoom * (1 + e.deltaY * 0.001))); }, { passive: true });
+addEventListener('blur', () => keys.clear());
+addEventListener('wheel', (e) => { if (!e.target.closest('#shop')) zoom = Math.min(1.6, Math.max(0.4, zoom * (1 + e.deltaY * 0.001))); }, { passive: true });
 addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
-$('ready').onclick = () => send({ t: 'ready' });
 const down = (...c) => c.some((k) => keys.has(k));
-setInterval(() => {
-  if (!myId) return;
-  send({ t: 'in', mx: down('KeyD', 'ArrowRight') - down('KeyA', 'ArrowLeft'), mz: down('KeyS', 'ArrowDown') - down('KeyW', 'ArrowUp'), aim: Math.round(localAim * 100) / 100, atk: mouseDown });
-}, SNAP_MS);
 
 // ---- Render loop ----
-const focus = new THREE.Vector3(0, 0, 8);
 let last = performance.now(), t = 0;
 function frame() {
   requestAnimationFrame(frame);
   const now = performance.now(), dt = Math.min((now - last) / 1000, 0.05);
   last = now; t += dt;
+  const pan = 40 * zoom * dt;
+  focus.x = Math.max(-60, Math.min(60, focus.x + (down('KeyD', 'ArrowRight') - down('KeyA', 'ArrowLeft')) * pan));
+  focus.z = Math.max(-60, Math.min(60, focus.z + (down('KeyS', 'ArrowDown') - down('KeyW', 'ArrowUp')) * pan));
   if (world && snap) {
-    const a = Math.min(1, (performance.now() - snapAt) / SNAP_MS);
-    const me = players.get(myId);
-    if (me && !me.dead) {
-      ray.setFromCamera(mouse, camera);
-      if (ray.ray.intersectPlane(aimPlane, aimPt)) localAim = Math.atan2(aimPt.x - (me.rx ?? me.cx), aimPt.z - (me.rz ?? me.cz));
-      me.aim = localAim;
-    }
-    for (const o of players.values()) {
-      place(o, a);
-      const walk = Math.min(1, Math.hypot(o.cx - o.px, o.cz - o.pz) / (SNAP_MS / 1000) / 6);
-      o.swing = Math.max(0, o.swing - dt * 4);
-      o.rot = lerpAngle(o.rot, o.aim, dt * 20);
-      o.h.g.visible = o.ring.visible = !o.dead;
-      o.y = (o.y ?? 0) + ((o.row[17] ? world.wallH * (world.grow || 1) : 0) - (o.y ?? 0)) * Math.min(1, dt * 10);
-      o.h.g.position.set(o.rx, o.y, o.rz);
-      o.h.g.rotation.y = o.rot;
-      o.ring.position.set(o.rx, o.y + 0.06, o.rz);
-      poseHero(o.h, walk, o.swing, t + o.id);
-    }
+    const a = Math.min(1, (now - snapAt) / SNAP_MS);
     for (const o of enemies.values()) {
       place(o, a);
       const dx = o.cx - o.px, dz = o.cz - o.pz, moving = Math.hypot(dx, dz) > 0.02;
@@ -358,8 +331,14 @@ function frame() {
       o.g.rotation.y = o.rot;
       if (o.bar) { const s = BEAST_SCALE[o.t]; o.bar.position.set(o.rx, 2.2 * s, o.rz); o.bar.scale.set(1.6 * s * (o.hp / 100), 0.14, 1); }
     }
+    // Defenders turn towards the nearest monster, or look outwards when all is quiet.
+    for (const o of units.values()) {
+      let aim = Math.atan2(o.x, o.z), bd = 30;
+      for (const e of enemies.values()) { const d = Math.hypot(e.rx - o.x, e.rz - o.z); if (d < bd) { bd = d; aim = Math.atan2(e.rx - o.x, e.rz - o.z); } }
+      o.rot = lerpAngle(o.rot, aim, dt * 6);
+      o.m.rotation.y = o.rot;
+    }
     for (const o of projs.values()) { place(o, a); o.m.position.set(o.rx, o.y, o.rz); }
-    if (me) focus.lerp(tmpV.set(me.rx, 0, me.rz), Math.min(1, dt * 7));
     world.flag.rotation.y = Math.sin(t * 2.2) * 0.35;
   }
   for (let i = fxs.length - 1; i >= 0; i--) {
@@ -373,7 +352,7 @@ function frame() {
   updateLook(LOOKS[snap ? snap.ph : 'prep'], Math.min(1, dt * 0.9));
   fireMat.emissiveIntensity = 1.8 + Math.sin(t * 17) * 0.3 + Math.sin(t * 7.3) * 0.3;
   orbMat.emissiveIntensity = 2.2 + Math.sin(t * 4) * 0.8;
-  camera.position.set(focus.x, 56 * zoom, focus.z + 40 * zoom);
+  camera.position.set(focus.x, 62 * zoom, focus.z + 44 * zoom);
   camera.lookAt(focus.x, 1, focus.z);
   sun.target.position.copy(focus);
   sun.position.copy(look.sp).normalize().multiplyScalar(110).add(focus);
