@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
 import { randomInt } from 'node:crypto';
-import { Game, TICK } from './game.js';
+import { Game, TICK, DIFFICULTY, LORDS, levelNeed, FINAL_WAVE } from './game.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MOUNTS = [
@@ -15,12 +15,18 @@ const MOUNTS = [
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json' };
 export const MAX_PLAYERS = 4;
 const MAX_ROOMS = 200;
+const LAYOUT = new Game().layout();
 
 function serveStatic(req, res) {
   const notFound = () => { res.writeHead(404); res.end('Not found'); };
   let url;
   try { url = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { return notFound(); }
   if (url === '/') url = '/index.html';
+  if (url === '/layout.json') {
+    // The castle layout is the same for every game, so the menu can show it before joining.
+    res.writeHead(200, { 'Content-Type': TYPES['.json'], 'Cache-Control': 'no-cache' });
+    return res.end(JSON.stringify(LAYOUT));
+  }
   for (const [prefix, dir] of MOUNTS) {
     if (!url.startsWith(prefix)) continue;
     const file = path.join(dir, url.slice(prefix.length));
@@ -43,15 +49,24 @@ const newCode = () => Array.from({ length: 4 }, () => CODE_CHARS[randomInt(CODE_
 export function start({ port = 3000, host = '127.0.0.1', dev = false } = {}) {
   const server = http.createServer(serveStatic);
   const rooms = new Map();
-  const wss = new WebSocketServer({ server, maxPayload: 2048 });
+  const wss = new WebSocketServer({ server, maxPayload: 64 * 1024 });
 
-  function openRoom(solo) {
+  function openRoom(solo, diff, lord) {
     if (rooms.size >= MAX_ROOMS) return null;
     let code;
     do code = solo ? `solo-${randomInt(1e9)}` : newCode(); while (rooms.has(code));
-    const room = { code, solo, game: new Game(), clients: new Set() };
+    const room = { code, solo, game: new Game(Math.random, Object.hasOwn(DIFFICULTY, diff) ? diff : 'normal', Object.hasOwn(LORDS, lord) ? lord : 'marshal'), clients: new Set(), phase: 'prep', speed: 1 };
     rooms.set(code, room);
     return room;
+  }
+
+  // Solo runs are saved in the player's browser between waves, so they can be continued later.
+  function sendSave(room) {
+    if (!room.solo) return;
+    const ph = room.game.phase;
+    if (ph === 'wave') return;
+    const msg = JSON.stringify({ t: 'save', d: ph === 'over' ? null : room.game.save() });
+    for (const c of room.clients) if (c.readyState === 1) c.send(msg);
   }
 
   wss.on('connection', (ws) => {
@@ -69,28 +84,44 @@ export function start({ port = 3000, host = '127.0.0.1', dev = false } = {}) {
           if (!r || r.solo) return reply({ t: 'err', why: 'noroom' });
           if (r.clients.size >= MAX_PLAYERS) return reply({ t: 'err', why: 'full' });
         } else {
-          r = openRoom(m.mode !== 'create');
+          r = openRoom(m.mode !== 'create', m.diff, m.lord);
           if (!r) return reply({ t: 'err', why: 'busy' });
+          if (r.solo && m.save && !r.game.load(m.save)) reply({ t: 'err', why: 'badsave' });
         }
         room = r;
         room.clients.add(ws);
         id = room.game.addPlayer();
         reply({ t: 'hello', id, room: room.solo ? null : room.code, layout: room.game.layout() });
+        sendSave(room);
         return;
       }
       if (!room) return;
       const game = room.game;
-      if (m.t === 'wave') game.chooseWave(id, m.i);
-      else if (m.t === 'buy') game.recruit(id, m.k);
-      else if (m.t === 'promote') game.promote(id, m.k);
-      else if (m.t === 'up') game.upgrade(id, m.b);
-      else if (m.t === 'repair') game.repair(id, m.what);
-      else if (m.t === 'perk') game.choosePerk(id, m.k);
+      let done = false;
+      if (m.t === 'wave') done = game.chooseWave(id, m.i);
+      else if (m.t === 'pick') done = game.choose(id, m.i);
+      else if (m.t === 'skip') done = game.skip(id);
+      else if (m.t === 'repick') done = game.rerollPick(id);
+      else if (m.t === 'buy') done = game.buy(id, m.i);
+      else if (m.t === 'lock') done = game.lock(id, m.i);
+      else if (m.t === 'reroll') done = game.rerollShop(id);
+      else if (m.t === 'train') done = game.train(id, m.u);
+      else if (m.t === 'dismiss') done = game.dismiss(id, m.u);
+      else if (m.t === 'up') done = game.upgrade(id, m.b);
+      else if (m.t === 'repair') done = game.repair(id, m.what);
+      else if (m.t === 'restart') done = game.restart(id);
+      else if (m.t === 'ability') done = game.ability(id, m.k, m.x, m.z);
+      else if (m.t === 'speed' && room.solo && [0, 1, 2, 3].includes(m.v)) room.speed = m.v;
       else if (m.t === 'dev' && dev) {
-        if (m.k === 'gold') game.gold += 500;
+        done = true;
+        if (m.k === 'gold') game.gold += 500 + game.gold;
         else if (m.k === 'boss' && game.phase === 'prep') { game.wave = Math.floor(game.wave / 10) * 10 + 9; game.makeWaveOffers(); }
         else if (m.k === 'hurt') game.th.hp = Math.min(game.th.hp, 60);
+        else if (m.k === 'skip' && game.phase === 'prep') { game.wave += 9; game.makeWaveOffers(); game.makeShop(); }
+        else if (m.k === 'victory' && game.phase === 'prep') { game.wave = FINAL_WAVE; game.won = true; game.picks.unshift({ type: 'victory' }); game.nextPick(); }
+        else if (m.k === 'level' && game.phase === 'prep') { game.castleXp(levelNeed(game.level) - game.xp); game.nextPick(); }
       }
+      if (done) sendSave(room);
     });
     ws.on('close', () => {
       if (!room) return;
@@ -102,8 +133,10 @@ export function start({ port = 3000, host = '127.0.0.1', dev = false } = {}) {
 
   const timer = setInterval(() => {
     for (const room of rooms.values()) {
-      room.game.step(TICK);
-      const msg = JSON.stringify(room.game.snapshot());
+      // Solo games can be paused or sped up; the rules always advance in the same fixed steps.
+      for (let i = 0; i < room.speed; i++) room.game.step(TICK);
+      if (room.game.phase !== room.phase) { room.phase = room.game.phase; if (room.phase !== 'wave') sendSave(room); }
+      const msg = JSON.stringify({ ...room.game.snapshot(), spd: room.speed });
       for (const c of room.clients) if (c.readyState === 1) c.send(msg);
     }
   }, TICK * 1000);

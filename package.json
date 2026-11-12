@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
-    "test": "node --test",
+    "test": "node --test --test-force-exit \"test/*.test.js\"",
     "balance": "node test/balance.js"
   },
   "dependencies": {
