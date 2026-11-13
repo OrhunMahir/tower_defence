@@ -48,6 +48,8 @@ Defenders are never bought; they only arrive as spoils.
 - **Walls that change look** as they grow: wooden palisade, then stone, fortress and finally a marble citadel. The keep grows turrets, a slate roof and then gold.
 - **Relaxed, Normal and Brutal** difficulty. Best waves and victories are remembered in the browser.
 - **Save and continue.** The run is saved in the browser every round.
+- **Sound and feedback.** Music and sound effects are synthesised in the browser, with no audio files. Damage numbers float over the monsters, critical hits show in gold, and the camera shakes when walls fall or bosses arrive.
+- **Tips for new players.** Short tips explain each step the first time it comes up; they can be switched off.
 
 A Normal run takes about 20 minutes of battle; the balance report measures this with bots. The research behind the design is in [`reports/`](reports/).
 
@@ -69,6 +71,7 @@ Then open http://127.0.0.1:3000. Co-op rooms still exist on the server but are h
 | `1`–`4` | pick a wave or a reward |
 | `1`–`3` in battle | use an ability (*Volley* then needs a click on the ground) |
 | `Space` | pause |
+| `M` | music on or off (sound buttons sit next to the speed buttons) |
 | `Tab` | switch panels |
 
 ## Commands
@@ -93,6 +96,7 @@ Then open http://127.0.0.1:3000. Co-op rooms still exist on the server but are h
 - `server/index.js` is the HTTP static server, the WebSocket server, rooms, speed control and saves.
 - `client/` is the Three.js client:
   - `models.js` builds everything that is drawn, including the wall tiers and the portraits.
-  - `main.js` handles the network, camera, HUD and reward screens.
+  - `main.js` handles the network, camera, HUD, reward screens and tips.
+  - `audio.js` synthesises the sound effects and music.
 - `test/` holds the tests, the bot commanders and the balance report.
 - `reports/` holds the genre research (in Turkish).

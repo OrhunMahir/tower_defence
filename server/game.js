@@ -948,13 +948,15 @@ export class Game {
   }
 
   // Deals damage, after curses and armour. u is the defender who dealt it, if any.
-  hurtEnemy(e, dmg, u = null, pierce = false) {
+  // Direct hits are reported to the client as damage numbers; burning, poison and oil are not.
+  hurtEnemy(e, dmg, u = null, pierce = false, crit = false, show = true) {
     if (e.hp <= 0) return;
     const d = ENEMIES[e.t];
     if (u && has(u, 'slayer') && (d.boss || d.armor || e.t === 1)) dmg *= 1.5;
     if (e.curse > 0) dmg *= 1 + e.curseK;
     if (d.armor && !pierce) dmg = Math.max(dmg * 0.25, dmg - d.armor * this.armorMul);
     e.hp -= dmg;
+    if (show && dmg >= 1) this.fx.push([22, r1(e.x), r1(e.z), Math.round(dmg), crit ? 1 : 0]);
     if (e.hp > 0) return;
     let gold = d.gold * this.goldMul * e.hx * (1 + 0.25 * this.fxCount('bounty'));
     if (u && has(u, 'greedy')) gold += 2 * this.goldMul;
@@ -1060,10 +1062,11 @@ export class Game {
       if (!best) continue;
       u.cd = this.unitReload(u) * (0.9 + this.rng() * 0.2);
       let dmg = this.unitPower(u);
-      if (this.rng() < this.unitCrit(u)) dmg *= 2;
-      if (d.melee) { this.hurtEnemy(best, dmg, u); this.fx.push([7, r2(best.x), r2(best.z), 0]); continue; }
+      const crit = this.rng() < this.unitCrit(u);
+      if (crit) dmg *= 2;
+      if (d.melee) { this.hurtEnemy(best, dmg, u, false, crit); this.fx.push([7, r2(best.x), r2(best.z), 0]); continue; }
       if (d.chain) { this.chain(best, dmg, d.chain + chainBonus, u); continue; }
-      const extra = {};
+      const extra = { crit };
       if (d.slow) extra.slowT = 2 * (1 + 0.25 * this.famTier.arcane);
       if (d.burn) extra.burn = d.burn * (dmg / u.p) * this.dotMul();
       if (d.poison) extra.poison = d.poison * (dmg / u.p) * this.dotMul();
@@ -1135,7 +1138,7 @@ export class Game {
       for (const e of victims) {
         if (b.slow) { e.slow = Math.max(e.slow, b.slowT); e.slowK = Math.max(e.slowK, b.slow); }
         if (b.burn) { e.burn = 3; e.burnDps = Math.max(e.burnDps, b.burn); e.burnU = b.u; }
-        this.hurtEnemy(e, b.dmg, b.u, b.pierce);
+        this.hurtEnemy(e, b.dmg, b.u, b.pierce, b.crit);
       }
     }
     this.projs = keep;
@@ -1144,12 +1147,12 @@ export class Game {
   // Burning monsters and poison clouds.
   updateClouds(dt) {
     for (const e of this.enemies) {
-      if (e.burn > 0) { e.burn -= dt; this.hurtEnemy(e, e.burnDps * dt, e.burnU); if (e.burn <= 0) e.burnDps = 0; }
+      if (e.burn > 0) { e.burn -= dt; this.hurtEnemy(e, e.burnDps * dt, e.burnU, false, false, false); if (e.burn <= 0) e.burnDps = 0; }
       if (e.curse > 0) { e.curse -= dt; if (e.curse <= 0) e.curseK = 0; }
     }
     for (const c of this.clouds) {
       c.t -= dt;
-      for (const e of this.enemies) if (!ENEMIES[e.t].fly && Math.hypot(e.x - c.x, e.z - c.z) < c.r + ENEMIES[e.t].r) this.hurtEnemy(e, c.dps * dt, c.u, true);
+      for (const e of this.enemies) if (!ENEMIES[e.t].fly && Math.hypot(e.x - c.x, e.z - c.z) < c.r + ENEMIES[e.t].r) this.hurtEnemy(e, c.dps * dt, c.u, true, false, false);
     }
     this.clouds = this.clouds.filter((c) => c.t > 0);
   }
@@ -1218,7 +1221,7 @@ export class Game {
       const d = ENEMIES[e.t];
       const c = d.fly ? { seg: null, th: pushOutBox(e, d.r, 0, 0, TH_HALF, TH_HALF) } : this.collideStatic(e, d.r);
       const nearTH = c.th || (Math.abs(e.x) < TH_HALF + d.r + 0.4 && Math.abs(e.z) < TH_HALF + d.r + 0.4);
-      if (oil && c.seg) this.hurtEnemy(e, oil * e.max * (d.boss ? 0.25 : 1) * dt);
+      if (oil && c.seg) this.hurtEnemy(e, oil * e.max * (d.boss ? 0.25 : 1) * dt, null, false, false, false);
       e.cd -= dt;
       if (e.cd > 0 || e.hp <= 0) continue;
       const hit = d.dmg * this.dmgMul * e.hx;

@@ -1,6 +1,7 @@
 // Client: sends the commander's choices, draws whatever the server says. No game rules live here.
 import * as THREE from 'three';
 import { buildWorld, makeUnit, makeBeast, makeTurret, hAt, winMat, fireMat, orbMat, frostMat, GLOW, BEAST_SCALE, TIERS, wallTier, keepTier, portrait } from './models.js';
+import { initAudio, setAudio, sfx, setMood } from './audio.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -114,7 +115,9 @@ const coin = '<i class="coin"></i>';
 const fmt = (n) => (Math.abs(n) >= 1e6 ? `${(n / 1e6).toFixed(Math.abs(n) >= 1e7 ? 0 : 1)}M` : Math.abs(n) >= 1e4 ? `${(n / 1e3).toFixed(Math.abs(n) >= 1e5 ? 0 : 1)}k` : String(Math.round(n)));
 const sign = (v) => (v > 0 ? `+${fmt(v)}` : fmt(v));
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
-const statLine = (k, v) => `${sign(v)}${STAT_TXT[k][1]} ${STAT_TXT[k][0].toLowerCase()}`;
+const lower = (t) => (t[1] && t[1] === t[1].toUpperCase() && t[1] !== ' ' ? t : t[0].toLowerCase() + t.slice(1)).replace(/^(\w+) (HP)$/, (_, a, b) => `${a.toLowerCase()} ${b}`);
+const statLine = (k, v) => `${sign(v)}${STAT_TXT[k][1]} ${lower(STAT_TXT[k][0])}`;
+const statTip = (keys) => keys.map((k) => `<b>${STAT_TXT[k][0]}</b>: ${STAT_TXT[k][2]}`).join('<br>');
 
 // ---- Renderer, scene and light ----
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -177,13 +180,16 @@ const store = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
   set(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable */ } },
 };
-const prefs = { diff: 'normal', lord: 'marshal', ...(store.get(PREFS_KEY) || {}) };
+const prefs = { diff: 'normal', lord: 'marshal', sfx: true, music: true, tips: true, seen: [], ...(store.get(PREFS_KEY) || {}) };
 if (!DIFF_TXT[prefs.diff]) prefs.diff = 'normal';
 if (!LORD_TXT[prefs.lord]) prefs.lord = 'marshal';
 function renderMenu() {
   $('diff').innerHTML = Object.entries(DIFF_TXT).map(([k, [name]]) => `<button data-diff="${k}" class="${k === prefs.diff ? 'on' : ''}">${name}</button>`).join('');
   $('diffTxt').textContent = DIFF_TXT[prefs.diff][1];
-  $('lords').innerHTML = Object.entries(LORD_TXT).map(([k, [name, icon, desc, mods]]) => `<button data-lord="${k}" class="lord ${k === prefs.lord ? 'on' : ''}"><span class="li">${icon}</span><b>${name}</b><span>${desc}</span><em>${mods}</em></button>`).join('');
+  $('lords').innerHTML = Object.entries(LORD_TXT).map(([k, [name, icon, desc, mods]]) => {
+    const tip = layout ? statTip(Object.keys(layout.lords[k].mods)) : '';
+    return `<button data-lord="${k}" class="lord ${k === prefs.lord ? 'on' : ''}" ${tip ? `data-tip="${esc(tip)}"` : ''}><span class="li">${icon}</span><b>${name}</b><span>${desc}</span><em>${mods}</em></button>`;
+  }).join('');
   const save = store.get(SAVE_KEY);
   $('playCont').hidden = !save;
   if (save) $('contTxt').textContent = `Wave ${save.wave + 1} next · ${LORD_TXT[save.lord]?.[0] || ''} · ${DIFF_TXT[save.diff]?.[0] || ''}`;
@@ -224,8 +230,9 @@ function connect(save) {
   };
 }
 const send = (m) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(m)); };
-$('playCont').onclick = () => connect(store.get(SAVE_KEY));
-$('playNew').onclick = () => { if (!store.get(SAVE_KEY) || confirm('Start a new run? Your saved run will be replaced.')) { store.set(SAVE_KEY, null); connect(null); } };
+const startAudio = () => initAudio({ sfx: prefs.sfx, music: prefs.music });
+$('playCont').onclick = () => { startAudio(); connect(store.get(SAVE_KEY)); };
+$('playNew').onclick = () => { startAudio(); if (!store.get(SAVE_KEY) || confirm('Start a new run? Your saved run will be replaced.')) { store.set(SAVE_KEY, null); connect(null); } };
 
 let toastTimer = 0;
 function toast(text, small = '', ms = 1800) {
@@ -265,6 +272,63 @@ const aimRing = new THREE.Mesh(new THREE.RingGeometry(0.9, 1, 48).rotateX(-Math.
 aimRing.visible = false;
 scene.add(aimRing);
 
+// ---- Juice: sounds per effect, floating damage numbers, camera shake ----
+const FX_SOUND = { 0: 'kill', 3: 'ice', 5: 'thump', 7: 'hit', 8: 'chime', 9: 'up', 10: 'spit', 12: 'zap', 17: 'spit', 18: 'fire', 19: 'volley', 20: 'mend', 21: 'rally' };
+const nums = [], projV = new THREE.Vector3();
+function damageNumber(x, z, v, crit) {
+  if (nums.length > 45) nums.shift().el.remove();
+  const el = document.createElement('div');
+  el.className = crit ? 'dn crit' : 'dn';
+  el.textContent = `${fmt(v)}${crit ? '!' : ''}`;
+  $('dmg').appendChild(el);
+  nums.push({ el, x: x + (Math.random() - 0.5) * 0.8, z, t: 0 });
+}
+function updateNumbers(dt) {
+  for (let i = nums.length - 1; i >= 0; i--) {
+    const n = nums[i];
+    n.t += dt;
+    if (n.t > 0.8) { n.el.remove(); nums.splice(i, 1); continue; }
+    projV.set(n.x, 3 + n.t * 2.2, n.z).project(camera);
+    if (projV.z > 1) { n.el.style.opacity = 0; continue; }
+    n.el.style.transform = `translate(${(projV.x * 0.5 + 0.5) * innerWidth}px,${(-projV.y * 0.5 + 0.5) * innerHeight}px) translate(-50%,-50%) scale(${n.t < 0.1 ? 0.6 + n.t * 4 : 1})`;
+    n.el.style.opacity = String(1 - (n.t / 0.8) ** 2);
+  }
+}
+let shakeAmt = 0;
+function shake(a) { shakeAmt = Math.min(1.5, Math.max(shakeAmt, a)); }
+
+// ---- Tips for the first runs: one at a time, each shown once ----
+const TIPS = [
+  ['start', (m) => m.ph === 'prep' && m.wave === 0, 'Pick one of the two waves at the bottom to begin. The harder wave pays double gold and better spoils, but it is a gamble.'],
+  ['battle', (m) => m.ph === 'wave' && m.wave <= 2, 'Your defenders fight on their own. Help them: press <b>1</b> and click the ground for a Volley, <b>2</b> mends the walls, <b>3</b> rallies everyone. <b>Space</b> pauses; the buttons at the top speed things up.'],
+  ['level', (m) => m.ph === 'reward' && m.pick?.type === 'level', 'Castle level up! Kills give the castle experience. Each level lets you pick one upgrade for the whole castle.'],
+  ['spoils', (m) => m.ph === 'reward' && m.pick?.type === 'spoils', 'Spoils of the wave: take a new defender, an item, a turret or a blessing. Defenders cannot be bought; they only come from here.'],
+  ['shop', (m) => m.ph === 'prep' && m.wave >= 1, 'Spend gold in the <b>Shop</b> on the right. The lock keeps an offer for later. The <b>Castle</b> tab upgrades the keep and walls; the <b>Stats</b> tab explains every number.'],
+  ['family', (m) => m.ph === 'prep' && m.fam && m.fam[1].some((t) => t > 0), 'Family bonus! Two defenders of the same family make that family stronger, four and six even more. See the <b>Army</b> tab.'],
+  ['boss', (m) => m.ph === 'prep' && (m.wave + 1) % 10 === 0, 'A boss attacks next wave. Repair and upgrade your walls before you start it.'],
+  ['full', (m) => m.ph === 'prep' && m.un.length >= m.cap, 'The walls are full. Upgrade the walls in the <b>Castle</b> tab to make room; until then new defenders come as promotions.'],
+];
+let tipNow = null;
+const savePrefs = () => store.set(PREFS_KEY, prefs);
+function markSeen(id) { if (!prefs.seen.includes(id)) { prefs.seen.push(id); savePrefs(); } }
+function updateTips(m) {
+  if (!prefs.tips) { $('advice').hidden = true; return; }
+  if (tipNow && TIPS.find((t) => t[0] === tipNow)[1](m)) return;
+  if (tipNow) { markSeen(tipNow); tipNow = null; }
+  const t = TIPS.find(([id, when]) => !prefs.seen.includes(id) && when(m));
+  $('advice').hidden = !t;
+  if (!t) return;
+  tipNow = t[0];
+  $('advice').innerHTML = `<span class="ai">💡</span><div>${t[2]}</div><button class="btn" data-ok>Got it</button><button class="btn alt" data-off>No tips</button>`;
+}
+$('advice').onclick = (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.off !== undefined) { prefs.tips = false; savePrefs(); }
+  else if (tipNow) markSeen(tipNow);
+  tipNow = null; $('advice').hidden = true;
+};
+
 function slotPos(slot, m) {
   const [x, z, seg] = layout.slots[slot];
   return [x, seg < 0 ? world.towerTop : world.wallH * (0.55 + 0.45 * (m.sg[seg] / 100)), z, seg];
@@ -279,6 +343,10 @@ function onSnap(m) {
   if (world.setWallTier(tier) && prev) toast(TIERS[tier].name, 'The walls have been rebuilt', 2600);
   world.setKeepTier(keepTier(bHall));
   m.sg.forEach((v, i) => { const g = world.segs[i]; g.visible = v > 0; g.scale.y = 0.55 + 0.45 * (v / 100); });
+  if (prev && m.ph === 'wave') {
+    if (m.sg.some((v, i) => v === 0 && prev.sg[i] > 0)) { sfx('crumble'); shake(0.9); }
+    if (m.th[0] < prev.th[0] - prev.th[1] * 0.004) { sfx('keep'); shake(0.35); }
+  }
   world.hall.scale.set(1 + 0.012 * (bHall - 1), 1 + 0.03 * (bHall - 1), 1 + 0.012 * (bHall - 1));
 
   // Defenders stand on their slot: a tower top or a wall segment.
@@ -325,10 +393,13 @@ function onSnap(m) {
     seen.add(id);
     let o = enemies.get(id);
     if (!o) {
-      o = { id, t, rot: Math.atan2(-x, -z), rings: [], ...makeBeast(t) };
+      o = { id, t, rot: Math.atan2(-x, -z), rings: [], hitT: 0, ...makeBeast(t) };
+      o.base = o.g.scale.x;
+      if (BOSS[t]) { sfx('roar'); shake(1.2); }
       scene.add(o.g);
       enemies.set(id, o);
     }
+    if (o.hp !== undefined && hp < o.hp) o.hitT = 0.12;
     o.hp = hp;
     if (BOSS[t]) { if (!boss || hp > boss.hp) boss = { t, hp }; }
     else if (hp < 100 && !o.bar) { o.bar = new THREE.Sprite(barMat); scene.add(o.bar); }
@@ -349,6 +420,7 @@ function onSnap(m) {
     if (!o) {
       const [geo, mat] = PROJ[kind] || [arrowGeo, arrowMat];
       o = { m: new THREE.Mesh(geo, mat), y: kind === 4 ? 4.5 : 4, kind };
+      sfx(kind === 7 || kind === 5 ? 'thump' : 'shoot');
       o.m.rotation.y = ang;
       if (kind === 4) o.m.scale.setScalar(2.2);
       if (kind === 7) o.m.scale.setScalar(1.4);
@@ -368,6 +440,10 @@ function onSnap(m) {
 
   for (const f of m.fx) {
     const [kind, x, z, v] = f;
+    const s2 = FX_SOUND[kind];
+    if (s2) sfx(s2);
+    if (kind === 1 && v >= 3.4) shake(0.25);
+    if (kind === 22) { damageNumber(x, z, v, f[4]); if (f[4]) sfx('crit'); continue; }
     if (kind === 0) addFx(puffGeo, GLOW[v], x, 0.8 * BEAST_SCALE[v] + (FLY[v] ? 5 : 0), z, BEAST_SCALE[v] * 1.3, 0.35);
     else if (kind === 1) addFx(puffGeo, 0x6fdcff, x, 1, z, v, 0.3);
     else if (kind === 3) addFx(puffGeo, 0xdff6ff, x, 1, z, v, 0.45);
@@ -388,14 +464,19 @@ function onSnap(m) {
     else if (kind === 20) { toast('Walls mended'); for (const s of layout.segs) addFx(haloGeo, 0x9dffb0, s.x, world.wallH * 0.6, s.z, 1.2, 0.6, 2); }
     else if (kind === 21) toast('Rally!', 'Every defender attacks faster');
   }
+  if (prev && prev.ph !== m.ph) { setMood(m.ph); if (m.ph === 'reward' && m.pick) sfx(m.pick.type === 'level' ? 'level' : m.pick.type === 'victory' ? 'victory' : 'chime'); }
   if (prev && prev.ph !== m.ph && m.ph === 'wave') {
+    sfx('horn');
     const bt = m.wave % 10 === 0 ? layout.enemies[layout.bosses[(m.wave / 10 - 1) % layout.bosses.length]].key : null;
     toast(`Wave ${m.wave}${m.wave === layout.finalWave ? ' · the final battle' : ''}`, bt ? `${MON[bt][0]} is coming` : '');
   }
-  if (prev && prev.ph === 'wave' && m.ph !== 'wave' && m.ph !== 'over') toast(`Wave ${m.wave} cleared`);
-  if (prev && prev.ph !== 'over' && m.ph === 'over') recordRun(m);
+  if (prev && prev.ph === 'wave' && m.ph !== 'wave' && m.ph !== 'over') { toast(`Wave ${m.wave} cleared`, m.gold > prev.gold ? `+${fmt(m.gold - prev.gold)} gold` : ''); sfx('coin'); }
+  else if (prev && prev.ph === 'reward' && m.ph === 'reward' && prev.pick && m.pick && JSON.stringify(prev.pick.opts) !== JSON.stringify(m.pick.opts) && prev.pick.type !== m.pick.type) sfx(m.pick.type === 'level' ? 'level' : 'chime');
+  if (prev && prev.ph !== 'over' && m.ph === 'over') { recordRun(m); sfx(m.victory ? 'victory' : 'defeat'); }
+  if (prev && m.gold < prev.gold && m.ph === 'prep') sfx('coin');
   if (m.ph !== 'wave') setAiming(false);
   updateHud(m, boss);
+  updateTips(m);
 }
 
 let newRecord = false;
@@ -504,7 +585,16 @@ renderer.domElement.addEventListener('click', (e) => {
 });
 renderer.domElement.addEventListener('contextmenu', (e) => { if (aiming) { e.preventDefault(); setAiming(false); abilSig = ''; } });
 
-$('speed').onclick = (e) => { const b = e.target.closest('button'); if (b) send({ t: 'speed', v: Number(b.dataset.spd) }); };
+function renderSound() { for (const b of $('speed').querySelectorAll('[data-snd]')) b.classList.toggle('off', !prefs[b.dataset.snd]); }
+$('speed').onclick = (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.snd) { prefs[b.dataset.snd] = !prefs[b.dataset.snd]; setAudio(b.dataset.snd, prefs[b.dataset.snd]); savePrefs(); renderSound(); return; }
+  send({ t: 'speed', v: Number(b.dataset.spd) });
+};
+renderSound();
+// A soft click for every button.
+document.addEventListener('click', (e) => { if (e.target.closest?.('.btn, .choice, .wcard, .lord, #tabs button, #speed button, .abil')) sfx('click'); }, true);
 
 // ---- Wave choice ----
 const monStats = (m, t) => {
@@ -558,7 +648,7 @@ function optionCard(o, footer) {
   }
   if (o.type === 'item') {
     const d = layout.items[o.key];
-    return `<div class="card r${d.r}" style="${rc(d.r)}"><div class="top"><div class="pic emo">${ITEM_TXT[o.key][0]}</div><div><span class="rar">${RAR_TXT[d.r]} item</span><div class="nm">${ITEM_TXT[o.key][1]}</div></div></div><div class="desc big">${itemDesc(o.key)}</div>${footer}</div>`;
+    return `<div class="card r${d.r}" style="${rc(d.r)}"><div class="top"><div class="pic emo">${ITEM_TXT[o.key][0]}</div><div><span class="rar">${RAR_TXT[d.r]} item</span><div class="nm">${ITEM_TXT[o.key][1]}</div></div></div><div class="desc big" ${d.mods ? `data-tip="${esc(statTip(Object.keys(d.mods)))}"` : ''}>${itemDesc(o.key)}</div>${footer}</div>`;
   }
   if (o.type === 'turret') {
     const d = layout.turrets[o.k], lv = o.lv || 1;
@@ -675,7 +765,7 @@ $('tabBody').addEventListener('mouseover', (e) => {
 $('tabBody').addEventListener('mouseleave', () => { rangeRing.visible = false; });
 
 // ---- Modals: rewards, victory and the end of a run ----
-let modalSig = '';
+let modalSig = '', pickAt = 0, lastPick = '';
 function renderModal(m) {
   const sig = JSON.stringify([m.ph, m.pick, m.gold >= (m.pick?.rr ?? Infinity), m.ph === 'over' && [m.reached, m.st, m.best, m.tm, m.victory]]);
   if (sig === modalSig) return;
@@ -701,6 +791,10 @@ function renderModal(m) {
       }
     }
   }
+  // A new choice ignores number keys for a moment, so a key meant for the battle cannot pick a reward.
+  const pk = m.ph === 'reward' && m.pick ? `${m.pick.type}:${m.pick.left}:${JSON.stringify(m.pick.opts || [])}` : '';
+  if (pk && pk !== lastPick) pickAt = performance.now();
+  lastPick = pk;
   $('modal').hidden = !h;
   $('modal').innerHTML = h;
 }
@@ -738,10 +832,11 @@ addEventListener('keydown', (e) => {
   const digit = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3 }[e.code];
   if (digit !== undefined) {
     if (snap.ph === 'prep' && digit < 2) send({ t: 'wave', i: digit });
-    else if (snap.ph === 'reward' && snap.pick && snap.pick.type !== 'victory') send({ t: 'pick', i: digit });
+    else if (snap.ph === 'reward' && snap.pick && snap.pick.type !== 'victory' && performance.now() - pickAt > 800) send({ t: 'pick', i: digit });
     else if (snap.ph === 'wave' && digit < 3) useAbility(Object.keys(layout.abilities)[digit]);
   }
   if (e.code === 'Escape' && aiming) { setAiming(false); abilSig = ''; }
+  if (e.code === 'KeyM') { prefs.music = !prefs.music; setAudio('music', prefs.music); savePrefs(); renderSound(); }
   if (e.code === 'Space') { e.preventDefault(); send({ t: 'speed', v: snap.spd ? 0 : 1 }); }
   if (e.code === 'Tab') {
     e.preventDefault();
@@ -777,6 +872,7 @@ function frame() {
       const fly = FLY[o.t] ? 5 + Math.sin(t * 2 + o.id) * 0.4 : 0;
       o.g.position.set(o.rx, hAt(o.rx, o.rz) + fly + Math.abs(w) * 0.08 * o.g.scale.y, o.rz);
       o.g.rotation.y = o.rot;
+      if (o.hitT > 0) { o.hitT -= dt; o.g.scale.setScalar(o.base * (1 + 0.18 * Math.max(0, o.hitT) / 0.12)); }
       if (o.bar) { const s = BEAST_SCALE[o.t]; o.bar.position.set(o.rx, 2.2 * s + fly, o.rz); o.bar.scale.set(1.6 * s * (o.hp / 100), 0.14, 1); }
     }
     // Defenders and turrets turn towards the nearest monster, or look outwards when all is quiet.
@@ -815,6 +911,11 @@ function frame() {
     focus.z = Math.max(-60, Math.min(60, focus.z + (down('KeyS', 'ArrowDown') - down('KeyW', 'ArrowUp')) * pan));
     camera.position.set(focus.x, 62 * zoom, focus.z + 44 * zoom);
     camera.lookAt(focus.x, 1, focus.z);
+    if (shakeAmt > 0) {
+      camera.position.x += (Math.random() - 0.5) * shakeAmt * 1.4;
+      camera.position.y += (Math.random() - 0.5) * shakeAmt * 1.0;
+      shakeAmt = Math.max(0, shakeAmt - dt * 2.5);
+    }
   } else {
     // The start menu circles slowly around the castle.
     const ang = t * 0.06;
@@ -823,6 +924,7 @@ function frame() {
   }
   sun.target.position.copy(joined ? focus : tmpV.set(0, 0, 0));
   sun.position.copy(look.sp).normalize().multiplyScalar(110).add(sun.target.position);
+  updateNumbers(dt);
   renderer.render(scene, camera);
 }
 frame();
