@@ -48,6 +48,16 @@ test('serves the client and the three.js module', async () => {
   assert.equal((await get('/vendor/three/build/three.module.js')).status, 200);
 });
 
+test('serves the rules, so the same game can run in the browser without a server', async () => {
+  for (const f of ['game.js', 'data.js', 'act.js']) {
+    const r = await get(`/rules/${f}`);
+    assert.equal(r.status, 200, f);
+    assert.match(r.headers.get('content-type'), /javascript/);
+    assert.match(await r.text(), /export /);
+  }
+  for (const f of ['index.js', '../package.json', 'game.js/../index.js']) { const r = await get(`/rules/${f}`); assert.equal(r.status, 404, f); await r.text(); }
+});
+
 test('does not serve files outside the client and vendor folders', async () => {
   for (const path of ['/../package.json', '/%2e%2e/package.json', '/..%2fpackage.json', '/vendor/three/..%2f..%2fpackage.json', '/vendor/three/../../server/game.js', '/nope.js']) {
     const r = await get(path);
@@ -67,7 +77,8 @@ test('solo: a private room, the layout, then about 20 snapshots per second', asy
   assert.equal(hello.room, null, 'a solo room has no code to share');
   assert.equal(hello.layout.segs.length, 28);
   assert.equal(hello.layout.slots.length, 32);
-  assert.equal(hello.layout.units.length, 15);
+  assert.equal(hello.layout.units.length, 36); assert.equal(hello.layout.plots.length, 7); assert.equal(hello.layout.turretSpots.length, 8);
+  assert.equal(hello.layout.ages.length, 4); assert.equal(hello.layout.siege.length, 11);
   assert.ok(Object.keys(hello.layout.lords).includes('engineer'));
   await a.next('s');
   const n0 = a.msgs.length;
@@ -178,14 +189,15 @@ test('the castle layout is served for the start menu', async () => {
   assert.equal(r.status, 200);
   const l = await r.json();
   assert.equal(l.segs.length, 28); assert.equal(l.slots.length, 32);
-  assert.ok(l.enemies.length >= 10 && l.units.includes('cleric'));
+  assert.equal(l.enemies.length, 16); assert.ok(l.units.includes('cleric') && l.units.includes('musketeer'));
+  for (const k of ['buildings', 'doctrines', 'events', 'specs', 'abilities', 'lords', 'items', 'tiers', 'mods']) assert.ok(k in l, k);
 });
 
 test('solo: the run is saved between waves and can be continued', async () => {
   const a = client();
-  await a.join('solo', null, { diff: 'relaxed' });
+  await a.join('solo', null, { siege: 0 });
   const first = await a.seen('save');
-  assert.equal(first.d.wave, 0); assert.equal(first.d.diff, 'relaxed');
+  assert.equal(first.d.wave, 0); assert.equal(first.d.siege, 0); assert.equal(first.d.v, 5);
   const s = await a.next('s');
   const i = s.shop.findIndex((o) => o && o.price <= s.gold);
   a.send({ t: 'buy', i });
@@ -195,7 +207,7 @@ test('solo: the run is saved between waves and can be continued', async () => {
   const b = client();
   await b.join('solo', null, { save: { ...saved, gold: 4321 } });
   const sb = await b.next('s');
-  assert.equal(sb.gold, 4321); assert.equal(sb.un.length, 4); assert.equal(sb.diff, 'relaxed');
+  assert.equal(sb.gold, 4321); assert.equal(sb.un.length, 4); assert.equal(sb.sv, 0);
   await b.close();
 });
 
@@ -255,4 +267,65 @@ test('co-op rooms cannot be paused or sped up', async () => {
   await wait(100);
   assert.equal((await a.next('s')).spd, 1);
   await a.close();
+});
+
+test('solo: siege level, lord, unlocked classes and abilities are chosen when joining', async () => {
+  const a = client();
+  await a.join('solo', null, { siege: 5, lord: 'merchant', classes: ['archer', 'mage'], abilities: ['meteor', 'freeze', 'mend'], daily: true });
+  const s = await a.next('s');
+  assert.equal(s.sv, 5); assert.equal(s.lord, 'merchant'); assert.equal(s.daily, true);
+  assert.deepEqual(s.ab.map((x) => x[0]), ['meteor', 'freeze', 'mend']);
+  const d = (await a.seen('save')).d;
+  assert.deepEqual(d.classes, ['archer', 'mage']);
+  await a.close();
+  const b = client();
+  await b.join('solo', null, { siege: 'x', lord: '__proto__', classes: 'all', abilities: ['meteor'] });
+  const sb = await b.next('s');
+  assert.equal(sb.sv, 1); assert.equal(sb.lord, 'marshal'); assert.deepEqual(sb.ab.map((x) => x[0]), ['volley', 'mend', 'rally']);
+  await b.close();
+});
+
+test('solo: two players with the same daily seed are dealt the same waves and shop', async () => {
+  const a = client(), b = client(), c = client();
+  await a.join('solo', null, { seed: 20261116, daily: true }); await b.join('solo', null, { seed: 20261116, daily: true }); await c.join('solo', null, { seed: 20261117, daily: true });
+  const [sa, sb, sc] = [await a.next('s'), await b.next('s'), await c.next('s')];
+  assert.deepEqual(sa.wv, sb.wv); assert.deepEqual(sa.shop, sb.shop);
+  assert.notDeepEqual([sa.wv, sa.shop], [sc.wv, sc.shop]);
+  await a.close(); await b.close(); await c.close();
+});
+
+test('the commander moves defenders, builds in the courtyard and advances the age over the wire', async () => {
+  const dev = start({ port: 0, dev: true });
+  const a = client(await dev.ready);
+  await a.join('solo');
+  let s = await a.next('s');
+  const u = s.ro.find((r) => r[14] >= 4), free = [...Array(32).keys()].find((i) => i >= 4 && !s.ro.some((r) => r[14] === i));
+  for (const room of dev.rooms.values()) room.game.level = 3;   // the first building needs castle level 2
+  a.send({ t: 'move', u: u[0], s: free });
+  a.send({ t: 'dev', k: 'gold' }); a.send({ t: 'dev', k: 'gold' });
+  a.send({ t: 'build', p: 0, k: 'forge' });
+  a.send({ t: 'build', p: 1, k: 'nope' }); a.send({ t: 'build', p: 99, k: 'market' }); a.send({ t: 'upbuild', p: 5 }); a.send({ t: 'demolish', p: 3 });
+  await wait(150);
+  s = await a.next('s');
+  assert.equal(s.ro.find((r) => r[0] === u[0])[14], free);
+  assert.deepEqual(s.pl.map((p) => p && p[0]), [0, null, null, null, null, null, null]);
+  assert.equal(s.age, 0);
+  a.send({ t: 'age' });
+  await wait(100);
+  assert.equal((await a.next('s')).age, 0, 'no boss has fallen yet');
+  a.send({ t: 'dev', k: 'age' }); a.send({ t: 'age' });
+  await wait(150);
+  s = await a.next('s');
+  assert.equal(s.age, 1); assert.equal(s.ph, 'reward'); assert.equal(s.pick.type, 'doctrine'); assert.equal(s.pick.opts.length, 3);
+  a.send({ t: 'pick', i: 0 });
+  await wait(100);
+  s = await a.next('s');
+  assert.equal(s.ph, 'prep'); assert.equal(s.dc.length, 1);
+  a.send({ t: 'demolish', p: 0 });
+  a.send({ t: 'dev', k: 'event' });
+  await wait(150);
+  s = await a.next('s');
+  assert.equal(s.pl[0], null); assert.equal(s.pick.type, 'event'); assert.ok(s.pick.ev);
+  await a.close();
+  await dev.close();
 });

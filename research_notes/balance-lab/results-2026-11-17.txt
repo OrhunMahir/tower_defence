@@ -1,0 +1,169 @@
+base-easy: 48 runs, median 32, past wave 32: 0/48 (0%), min - | fell in w1-9: 1, w10-16: 10, w17-24: 5, w25-32: 1 | hard: 0 waves, 0 fell (0.0%), keep lost 0% | std: 1279 waves, 17 fell, keep lost 3.2% | hard battering 0/0 fell | from a full keep 17/17
+  fell on: 9 10 14 14 14 15 16 16 16 16 16 18 18 21 21 23 30 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+
+hard waves by theme:
+
+std waves by theme:
+  battering              waves  64  fell  7 (11%)  keep lost  15%  walls lost   6%  down 0.4  bad 8
+  horde                  waves 111  fell  5 ( 5%)  keep lost   8%  walls lost   4%  down 0.1  bad 6
+  underminers            waves  43  fell  1 ( 2%)  keep lost   6%  walls lost   0%  down 0.0  bad 1
+  ironhide               waves  46  fell  1 ( 2%)  keep lost   4%  walls lost   4%  down 0.1  bad 1
+  siege                  waves 117  fell  2 ( 2%)  keep lost   5%  walls lost   5%  down 0.1  bad 4
+  warband                waves 205  fell  1 ( 0%)  keep lost   2%  walls lost   4%  down 0.0  bad 1
+  skyraid                waves  99  fell  0 ( 0%)  keep lost   5%  walls lost   1%  down 0.0  bad 0
+  haunting               waves  18  fell  0 ( 0%)  keep lost   1%  walls lost   1%  down 0.0  bad 0
+  brood                  waves  61  fell  0 ( 0%)  keep lost   1%  walls lost   2%  down 0.0  bad 0
+  coven                  waves  65  fell  0 ( 0%)  keep lost   1%  walls lost   2%  down 0.0  bad 0
+  spitters               waves 113  fell  0 ( 0%)  keep lost   1%  walls lost   2%  down 0.0  bad 0
+  swarm                  waves 234  fell  0 ( 0%)  keep lost   0%  walls lost   1%  down 0.0  bad 0
+  blight                 waves  86  fell  0 ( 0%)  keep lost   0%  walls lost   1%  down 0.0  bad 0
+  bombardment            waves  17  fell  0 ( 0%)  keep lost   0%  walls lost   3%  down 0.0  bad 0
+
+base-mixed: 48 runs, median 32, past wave 32: 0/48 (0%), min - | fell in w1-9: 3, w10-16: 6, w17-24: 11, w25-32: 3 | hard: 459 waves, 22 fell (4.8%), keep lost 9% | std: 734 waves, 1 fell, keep lost 1.0% | hard battering 17/7 fell | from a full keep 23/23
+  fell on: 6 6 6 10 10 12 12 14 14 18 18 18 19 20 20 20 20 22 22 22 26 28 30 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+
+hard waves by theme:
+  battering              waves  17  fell  7 (41%)  keep lost  45%  walls lost  14%  down 1.8  bad 7
+  siege                  waves  39  fell  5 (13%)  keep lost  20%  walls lost   9%  down 0.6  bad 6
+  ironhide               waves  10  fell  1 (10%)  keep lost  14%  walls lost   6%  down 0.5  bad 1
+  horde                  waves  32  fell  3 ( 9%)  keep lost  15%  walls lost   6%  down 0.1  bad 4
+  skyraid                waves  33  fell  1 ( 3%)  keep lost  13%  walls lost   1%  down 0.0  bad 4
+  warband                waves 103  fell  3 ( 3%)  keep lost   9%  walls lost   6%  down 0.1  bad 8
+  swarm                  waves  80  fell  2 ( 3%)  keep lost   4%  walls lost   3%  down 0.1  bad 2
+  underminers            waves  13  fell  0 ( 0%)  keep lost   5%  walls lost   0%  down 0.0  bad 0
+  haunting               waves   6  fell  0 ( 0%)  keep lost   3%  walls lost   0%  down 0.0  bad 0
+  brood                  waves  19  fell  0 ( 0%)  keep lost   2%  walls lost   1%  down 0.0  bad 0
+  coven                  waves  25  fell  0 ( 0%)  keep lost   1%  walls lost   3%  down 0.0  bad 0
+  spitters               waves  44  fell  0 ( 0%)  keep lost   1%  walls lost   3%  down 0.0  bad 0
+  bombardment            waves   7  fell  0 ( 0%)  keep lost   1%  walls lost   3%  down 0.0  bad 0
+  blight                 waves  31  fell  0 ( 0%)  keep lost   0%  walls lost   1%  down 0.0  bad 0
+std waves by theme:
+  battering              waves  25  fell  1 ( 4%)  keep lost   6%  walls lost   5%  down 0.1  bad 2
+  skyraid                waves  47  fell  0 ( 0%)  keep lost   3%  walls lost   1%  down 0.0  bad 0
+  warband                waves 100  fell  0 ( 0%)  keep lost   2%  walls lost   3%  down 0.0  bad 0
+  siege                  waves  79  fell  0 ( 0%)  keep lost   1%  walls lost   3%  down 0.0  bad 0
+  ironhide               waves  21  fell  0 ( 0%)  keep lost   1%  walls lost   2%  down 0.0  bad 0
+  spitters               waves  68  fell  0 ( 0%)  keep lost   1%  walls lost   2%  down 0.0  bad 0
+  horde                  waves  68  fell  0 ( 0%)  keep lost   1%  walls lost   2%  down 0.0  bad 0
+  underminers            waves  18  fell  0 ( 0%)  keep lost   1%  walls lost   0%  down 0.0  bad 0
+  haunting               waves  25  fell  0 ( 0%)  keep lost   0%  walls lost   0%  down 0.0  bad 0
+  swarm                  waves 152  fell  0 ( 0%)  keep lost   0%  walls lost   1%  down 0.0  bad 0
+  blight                 waves  55  fell  0 ( 0%)  keep lost   0%  walls lost   1%  down 0.0  bad 0
+  coven                  waves  36  fell  0 ( 0%)  keep lost   0%  walls lost   1%  down 0.0  bad 0
+  brood                  waves  33  fell  0 ( 0%)  keep lost   0%  walls lost   1%  down 0.0  bad 0
+  bombardment            waves   7  fell  0 ( 0%)  keep lost   0%  walls lost   0%  down 0.0  bad 0
+
+base-hard: 48 runs, median 32, past wave 32: 0/48 (0%), min - | fell in w1-9: 3, w10-16: 0, w17-24: 6, w25-32: 1 | hard: 1395 waves, 10 fell (0.7%), keep lost 2% | std: 0 waves, 0 fell, keep lost 0.0% | hard battering 55/2 fell | from a full keep 10/10
+  fell on: 6 7 8 18 21 21 23 23 24 28 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+
+hard waves by theme:
+  underminers            waves  38  fell  2 ( 5%)  keep lost   9%  walls lost   0%  down 0.0  bad 2
+  battering              waves  55  fell  2 ( 4%)  keep lost   5%  walls lost   6%  down 0.2  bad 2
+  siege                  waves 121  fell  2 ( 2%)  keep lost   3%  walls lost   4%  down 0.1  bad 2
+  ironhide               waves  64  fell  1 ( 2%)  keep lost   2%  walls lost   2%  down 0.0  bad 1
+  warband                waves 200  fell  3 ( 2%)  keep lost   4%  walls lost   4%  down 0.1  bad 4
+  skyraid                waves 107  fell  0 ( 0%)  keep lost   4%  walls lost   0%  down 0.0  bad 0
+  haunting               waves  32  fell  0 ( 0%)  keep lost   2%  walls lost   0%  down 0.0  bad 0
+  horde                  waves 122  fell  0 ( 0%)  keep lost   2%  walls lost   2%  down 0.0  bad 0
+  bombardment            waves  16  fell  0 ( 0%)  keep lost   1%  walls lost   1%  down 0.0  bad 0
+  coven                  waves  76  fell  0 ( 0%)  keep lost   0%  walls lost   1%  down 0.0  bad 0
+  swarm                  waves 257  fell  0 ( 0%)  keep lost   0%  walls lost   2%  down 0.0  bad 0
+  spitters               waves 149  fell  0 ( 0%)  keep lost   0%  walls lost   1%  down 0.0  bad 0
+  brood                  waves  60  fell  0 ( 0%)  keep lost   0%  walls lost   0%  down 0.0  bad 0
+  blight                 waves  98  fell  0 ( 0%)  keep lost   0%  walls lost   1%  down 0.0  bad 0
+std waves by theme:
+
+
+c0 [natural] 1452 waves  fell  87 ( 6.0%)  badly hurt  33 ( 2.3%)  keep lost 10.0%  walls lost  4.4%  down 0.18  52s  count 90
+    w06-09          192 waves  fell  11 ( 5.7%)  badly hurt   6 ( 3.1%)  keep lost 13.6%  walls lost  6.9%  down 0.20  57s  count 51
+    w10-16          516 waves  fell  29 ( 5.6%)  badly hurt  26 ( 5.0%)  keep lost 11.1%  walls lost  5.4%  down 0.22  53s  count 87
+    w17-24          420 waves  fell  31 ( 7.4%)  badly hurt   1 ( 0.2%)  keep lost 10.2%  walls lost  3.8%  down 0.20  50s  count 100
+    w25-32          324 waves  fell  16 ( 4.9%)  badly hurt   0 ( 0.0%)  keep lost  5.9%  walls lost  2.1%  down 0.09  51s  count 107
+    battering        77 waves  fell  27 (35.1%)  badly hurt   0 ( 0.0%)  keep lost 38.9%  walls lost 12.4%  down 1.64  66s  count 106
+    underminers      71 waves  fell  10 (14.1%)  badly hurt   0 ( 0.0%)  keep lost 19.2%  walls lost  0.5%  down 0.00  41s  count 108
+    siege           137 waves  fell  17 (12.4%)  badly hurt  10 ( 7.3%)  keep lost 19.8%  walls lost  8.7%  down 0.47  55s  count 58
+    ironhide         57 waves  fell   4 ( 7.0%)  badly hurt   0 ( 0.0%)  keep lost  9.1%  walls lost  6.2%  down 0.28  63s  count 57
+    warband         158 waves  fell  10 ( 6.3%)  badly hurt  10 ( 6.3%)  keep lost 14.3%  walls lost  7.1%  down 0.18  53s  count 89
+    skyraid         120 waves  fell   7 ( 5.8%)  badly hurt   8 ( 6.7%)  keep lost 15.7%  walls lost  0.7%  down 0.00  39s  count 104
+    coven            96 waves  fell   4 ( 4.2%)  badly hurt   2 ( 2.1%)  keep lost  7.0%  walls lost  4.4%  down 0.14  64s  count 99
+    horde           162 waves  fell   6 ( 3.7%)  badly hurt   3 ( 1.9%)  keep lost 10.0%  walls lost  5.5%  down 0.09  64s  count 73
+    haunting         31 waves  fell   1 ( 3.2%)  badly hurt   0 ( 0.0%)  keep lost  6.3%  walls lost  0.7%  down 0.00  42s  count 108
+    swarm           168 waves  fell   1 ( 0.6%)  badly hurt   0 ( 0.0%)  keep lost  1.6%  walls lost  3.3%  down 0.01  47s  count 101
+    spitters        151 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.1%  walls lost  2.5%  down 0.00  52s  count 91
+    brood            88 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.4%  walls lost  1.7%  down 0.00  51s  count 101
+    blight          113 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.1%  walls lost  1.8%  down 0.00  34s  count 99
+    bombardment      23 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.3%  walls lost  3.5%  down 0.00  84s  count 100
+c0 [battering]  227 waves  fell  51 (22.5%)  badly hurt   6 ( 2.6%)  keep lost 27.0%  walls lost 10.7%  down 1.06  68s  count 107
+    w10-16           41 waves  fell  13 (31.7%)  badly hurt   2 ( 4.9%)  keep lost 40.1%  walls lost 13.9%  down 1.37  68s  count 94
+    w17-24          105 waves  fell  26 (24.8%)  badly hurt   4 ( 3.8%)  keep lost 30.4%  walls lost 11.8%  down 1.13  67s  count 110
+    w25-32           81 waves  fell  12 (14.8%)  badly hurt   0 ( 0.0%)  keep lost 16.0%  walls lost  7.6%  down 0.81  69s  count 110
+
+c1 [natural] 1452 waves  fell  74 ( 5.1%)  badly hurt  34 ( 2.3%)  keep lost  9.2%  walls lost  4.2%  down 0.14  52s  count 90
+    w06-09          192 waves  fell  11 ( 5.7%)  badly hurt   6 ( 3.1%)  keep lost 13.6%  walls lost  6.9%  down 0.20  57s  count 51
+    w10-16          516 waves  fell  23 ( 4.5%)  badly hurt  27 ( 5.2%)  keep lost 10.0%  walls lost  5.2%  down 0.16  53s  count 87
+    w17-24          420 waves  fell  24 ( 5.7%)  badly hurt   1 ( 0.2%)  keep lost  8.5%  walls lost  3.4%  down 0.13  50s  count 100
+    w25-32          324 waves  fell  16 ( 4.9%)  badly hurt   0 ( 0.0%)  keep lost  5.9%  walls lost  2.1%  down 0.09  51s  count 106
+    battering        77 waves  fell  14 (18.2%)  badly hurt   1 ( 1.3%)  keep lost 22.4%  walls lost  9.1%  down 0.87  63s  count 106
+    underminers      71 waves  fell  10 (14.1%)  badly hurt   0 ( 0.0%)  keep lost 19.2%  walls lost  0.5%  down 0.00  41s  count 108
+    siege           137 waves  fell  17 (12.4%)  badly hurt  10 ( 7.3%)  keep lost 19.8%  walls lost  8.7%  down 0.47  55s  count 58
+    ironhide         57 waves  fell   4 ( 7.0%)  badly hurt   0 ( 0.0%)  keep lost  9.1%  walls lost  6.2%  down 0.28  63s  count 57
+    warband         158 waves  fell  10 ( 6.3%)  badly hurt  10 ( 6.3%)  keep lost 14.3%  walls lost  7.1%  down 0.18  53s  count 89
+    skyraid         120 waves  fell   7 ( 5.8%)  badly hurt   8 ( 6.7%)  keep lost 15.7%  walls lost  0.7%  down 0.00  39s  count 104
+    coven            96 waves  fell   4 ( 4.2%)  badly hurt   2 ( 2.1%)  keep lost  7.0%  walls lost  4.4%  down 0.14  64s  count 99
+    horde           162 waves  fell   6 ( 3.7%)  badly hurt   3 ( 1.9%)  keep lost  9.9%  walls lost  5.2%  down 0.09  63s  count 73
+    haunting         31 waves  fell   1 ( 3.2%)  badly hurt   0 ( 0.0%)  keep lost  6.3%  walls lost  0.7%  down 0.00  42s  count 108
+    swarm           168 waves  fell   1 ( 0.6%)  badly hurt   0 ( 0.0%)  keep lost  1.6%  walls lost  3.3%  down 0.01  47s  count 101
+    spitters        151 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.1%  walls lost  2.5%  down 0.00  52s  count 91
+    brood            88 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.4%  walls lost  1.7%  down 0.00  51s  count 101
+    blight          113 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.1%  walls lost  1.8%  down 0.00  34s  count 99
+    bombardment      23 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.3%  walls lost  3.5%  down 0.00  84s  count 100
+c1 [battering]  227 waves  fell  24 (10.6%)  badly hurt   3 ( 1.3%)  keep lost 14.1%  walls lost  7.4%  down 0.46  64s  count 107
+    w10-16           41 waves  fell   6 (14.6%)  badly hurt   2 ( 4.9%)  keep lost 22.9%  walls lost  9.6%  down 0.59  64s  count 91
+    w17-24          105 waves  fell  14 (13.3%)  badly hurt   1 ( 1.0%)  keep lost 16.5%  walls lost  8.4%  down 0.58  63s  count 110
+    w25-32           81 waves  fell   4 ( 4.9%)  badly hurt   0 ( 0.0%)  keep lost  6.5%  walls lost  4.9%  down 0.25  66s  count 110
+
+c2 [natural] 1452 waves  fell  46 ( 3.2%)  badly hurt  10 ( 0.7%)  keep lost  6.6%  walls lost  3.7%  down 0.10  50s  count 87
+    w06-09          192 waves  fell   5 ( 2.6%)  badly hurt   3 ( 1.6%)  keep lost  9.0%  walls lost  6.3%  down 0.09  54s  count 47
+    w10-16          516 waves  fell  17 ( 3.3%)  badly hurt   6 ( 1.2%)  keep lost  7.8%  walls lost  4.5%  down 0.11  50s  count 82
+    w17-24          420 waves  fell  14 ( 3.3%)  badly hurt   1 ( 0.2%)  keep lost  6.1%  walls lost  3.1%  down 0.13  49s  count 98
+    w25-32          324 waves  fell  10 ( 3.1%)  badly hurt   0 ( 0.0%)  keep lost  4.0%  walls lost  1.7%  down 0.06  50s  count 105
+    battering        77 waves  fell  17 (22.1%)  badly hurt   0 ( 0.0%)  keep lost 27.2%  walls lost 10.2%  down 1.01  67s  count 104
+    siege           137 waves  fell   9 ( 6.6%)  badly hurt   2 ( 1.5%)  keep lost 12.2%  walls lost  7.3%  down 0.24  53s  count 54
+    ironhide         57 waves  fell   3 ( 5.3%)  badly hurt   0 ( 0.0%)  keep lost  7.1%  walls lost  5.3%  down 0.28  59s  count 52
+    underminers      71 waves  fell   3 ( 4.2%)  badly hurt   0 ( 0.0%)  keep lost  9.6%  walls lost  0.3%  down 0.00  41s  count 107
+    horde           162 waves  fell   6 ( 3.7%)  badly hurt   0 ( 0.0%)  keep lost  7.9%  walls lost  4.5%  down 0.07  59s  count 68
+    warband         158 waves  fell   4 ( 2.5%)  badly hurt   5 ( 3.2%)  keep lost  9.7%  walls lost  6.0%  down 0.07  50s  count 85
+    skyraid         120 waves  fell   3 ( 2.5%)  badly hurt   3 ( 2.5%)  keep lost 11.2%  walls lost  0.5%  down 0.00  37s  count 102
+    coven            96 waves  fell   1 ( 1.0%)  badly hurt   0 ( 0.0%)  keep lost  2.8%  walls lost  3.5%  down 0.03  62s  count 95
+    swarm           168 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.9%  walls lost  2.8%  down 0.00  45s  count 99
+    spitters        151 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.3%  walls lost  2.0%  down 0.00  50s  count 88
+    brood            88 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.4%  walls lost  1.4%  down 0.00  48s  count 97
+    blight          113 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.1%  walls lost  1.4%  down 0.00  33s  count 96
+    bombardment      23 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.7%  walls lost  3.6%  down 0.00  83s  count 92
+    haunting         31 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  2.4%  walls lost  0.5%  down 0.00  40s  count 107
+c2 [battering]  227 waves  fell  38 (16.7%)  badly hurt   4 ( 1.8%)  keep lost 21.2%  walls lost  9.4%  down 0.81  66s  count 105
+    w10-16           41 waves  fell  10 (24.4%)  badly hurt   4 ( 9.8%)  keep lost 34.2%  walls lost 12.0%  down 1.05  65s  count 86
+    w17-24          105 waves  fell  21 (20.0%)  badly hurt   0 ( 0.0%)  keep lost 24.5%  walls lost 10.9%  down 0.94  65s  count 109
+    w25-32           81 waves  fell   7 ( 8.6%)  badly hurt   0 ( 0.0%)  keep lost 10.4%  walls lost  6.2%  down 0.52  68s  count 110
+
+c3 [natural] 1452 waves  fell  28 ( 1.9%)  badly hurt  12 ( 0.8%)  keep lost  5.0%  walls lost  3.3%  down 0.07  49s  count 84
+    w06-09          192 waves  fell   2 ( 1.0%)  badly hurt   1 ( 0.5%)  keep lost  6.2%  walls lost  5.6%  down 0.04  52s  count 44
+    w10-16          516 waves  fell  10 ( 1.9%)  badly hurt  11 ( 2.1%)  keep lost  6.1%  walls lost  4.1%  down 0.08  49s  count 78
+    w17-24          420 waves  fell  11 ( 2.6%)  badly hurt   0 ( 0.0%)  keep lost  5.0%  walls lost  2.7%  down 0.08  47s  count 96
+    w25-32          324 waves  fell   5 ( 1.5%)  badly hurt   0 ( 0.0%)  keep lost  2.4%  walls lost  1.4%  down 0.05  49s  count 104
+    battering        77 waves  fell  13 (16.9%)  badly hurt   0 ( 0.0%)  keep lost 22.0%  walls lost  9.0%  down 0.69  65s  count 102
+    siege           137 waves  fell   5 ( 3.6%)  badly hurt   4 ( 2.9%)  keep lost  9.8%  walls lost  6.4%  down 0.17  51s  count 51
+    ironhide         57 waves  fell   2 ( 3.5%)  badly hurt   0 ( 0.0%)  keep lost  5.2%  walls lost  4.5%  down 0.12  57s  count 49
+    underminers      71 waves  fell   2 ( 2.8%)  badly hurt   0 ( 0.0%)  keep lost  7.5%  walls lost  0.3%  down 0.00  40s  count 105
+    horde           162 waves  fell   3 ( 1.9%)  badly hurt   0 ( 0.0%)  keep lost  5.2%  walls lost  4.1%  down 0.04  58s  count 64
+    warband         158 waves  fell   2 ( 1.3%)  badly hurt   5 ( 3.2%)  keep lost  6.4%  walls lost  5.4%  down 0.03  49s  count 83
+    skyraid         120 waves  fell   1 ( 0.8%)  badly hurt   3 ( 2.5%)  keep lost  9.2%  walls lost  0.3%  down 0.00  36s  count 100
+    swarm           168 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.8%  walls lost  2.4%  down 0.00  43s  count 97
+    spitters        151 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.1%  walls lost  1.6%  down 0.00  48s  count 85
+    coven            96 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  1.4%  walls lost  3.5%  down 0.00  63s  count 92
+    brood            88 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.4%  walls lost  1.4%  down 0.00  47s  count 94
+    blight          113 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.1%  walls lost  1.4%  down 0.00  32s  count 93
+    bombardment      23 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.2%  walls lost  3.0%  down 0.00  81s  count 86
+    haunting         31 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  1.7%  walls lost  0.4%  down 0.00  39s  count 106
+c3 [battering]  227 waves  fell  29 (12.8%)  badly hurt   1 ( 0.4%)  keep lost 16.7%  walls lost  8.5%  down 0.61  64s  count 103
+    w10-16           41 waves  fell  10 (24.4%)  badly hurt   1 ( 2.4%)  keep lost 32.6%  walls lost 11.3%  down 1.05  63s  count 80
+    w17-24          105 waves  fell  14 (13.3%)  badly hurt   0 ( 0.0%)  keep lost 17.3%  walls lost  9.5%  down 0.63  64s  count 107
+    w25-32           81 waves  fell   5 ( 6.2%)  badly hurt   0 ( 0.0%)  keep lost  7.9%  walls lost  5.6%  down 0.36  66s  count 110
+

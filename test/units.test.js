@@ -1,8 +1,8 @@
 // Defenders: recruits, placement, training, experience, families and how each class fights.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { S, UNITS, UNIT_KEYS, FAMILIES, CAPACITY, RARITY, TRAITS, xpNeed, recruitLevel, wallMul, thMax } from '../server/game.js';
-import { newGame, steps, seconds, emptyWave, addEnemy, card } from './bots.js';
+import { S, UNITS, UNIT_KEYS, FAMILIES, PATH_KEYS, CAPACITY, RARITY, TRAITS, SPECS, SPEC_LEVEL, TURRETS, xpNeed, recruitLevel, wallMul, thMax } from '../server/game.js';
+import { newGame, steps, seconds, emptyWave, addEnemy, card, place, takeRewards } from './bots.js';
 
 const near = (a, b, eps = 1e-6) => assert.ok(Math.abs(a - b) <= eps, `${a} is not within ${eps} of ${b}`);
 // A game whose only defender is one unit of the given class on the south wall, x = 8.
@@ -23,9 +23,14 @@ function recruit(g, id, k, extra) {
   return g.choose(id, 0);
 }
 
-test('fifteen classes in five families of three', () => {
-  assert.equal(UNIT_KEYS.length, 15);
-  for (const f of FAMILIES) assert.equal(UNIT_KEYS.filter((k) => UNITS[k].fam === f).length, 3, f);
+test('thirty-six classes in six families: three for everyone and one more on each path of ages', () => {
+  assert.equal(UNIT_KEYS.length, 36); assert.equal(FAMILIES.length, 6);
+  for (const f of FAMILIES) {
+    assert.equal(UNIT_KEYS.filter((k) => UNITS[k].fam === f && !UNITS[k].path).length, 3, f);
+    for (const p of PATH_KEYS) assert.equal(UNIT_KEYS.filter((k) => UNITS[k].fam === f && UNITS[k].path === p).length, 1, `${f} on the path of ${p}`);
+  }
+  for (const p of PATH_KEYS) for (const age of [5, 6, 7]) assert.equal(UNIT_KEYS.filter((k) => UNITS[k].path === p && UNITS[k].age === age).length, 2, `${p}, age ${age}`);
+  for (const k of UNIT_KEYS) { assert.equal(SPECS[k].length, 2, k); if (UNITS[k].path) assert.equal(UNITS[k].unlock, 0, 'path classes need no renown'); }
 });
 
 test('recruits come with a class, rarity, name, rolled stats and traits', () => {
@@ -319,9 +324,200 @@ test('family bonuses: two, four and six of a family raise its tier', () => {
   for (let i = 0; i < 6; i++) { recruit(g, id, ['archer', 'crossbow', 'ranger'][i % 3]); tiers.push(g.famTier.marksmen); }
   assert.deepEqual(tiers, [0, 1, 1, 2, 2, 3]);
   const archer = g.units[0];
-  near(g.unitRange(archer), archer.range * 1.3);
+  near(g.unitRange(archer), archer.range * (1.3 + (g.slots[archer.slot].seg < 0 ? 0.15 : 0)));
   near(g.unitCrit(archer), 0.15);
   g.addItem('wardenflag'); g.addItem('wardenflag');
   assert.equal(g.famTier.wardens, 1, 'a banner counts as one more of the family');
   near(g.guardMul(), 1 - 0.08);
+});
+
+// ---- New in the ages update ----
+
+test('a defender in a tower sees 15% further', () => {
+  const { g } = newGame();
+  g.units = [];
+  const tower = place(g, 'mage', 0), wall = place(g, 'mage', 10);
+  near(g.unitRange(tower), UNITS.mage.range * 1.15);
+  near(g.unitRange(wall), UNITS.mage.range);
+});
+
+test('the commander moves defenders around; two of them swap places', () => {
+  const { g, id } = newGame();
+  const [a, b] = g.units, sa = a.slot, sb = b.slot;
+  const free = g.slots.findIndex((_, i) => i >= 4 && !g.units.some((u) => u.slot === i));
+  assert.ok(g.move(id, a.uid, free)); assert.equal(a.slot, free);
+  assert.ok(g.move(id, a.uid, sb), 'swap with whoever stands there');
+  assert.equal(a.slot, sb); assert.equal(b.slot, free);
+  for (const bad of [-1, 999, 1.5, '3', null]) assert.equal(g.move(id, a.uid, bad), false, String(bad));
+  assert.equal(g.move(id, a.uid, a.slot), false); assert.equal(g.move(999, a.uid, sa), false); assert.equal(g.move(id, 12345, sa), false);
+  const spear = g.units.find((u) => u.k === 'spear');
+  assert.equal(g.move(id, spear.uid, 0), false, 'a spearman cannot stand in a tower');
+  const archer = g.units.find((u) => u.k === 'archer' && u !== spear);
+  assert.ok(g.move(id, archer.uid, 1));
+  assert.equal(g.move(id, archer.uid, spear.slot), false, 'nor be swapped into one');
+  g.chooseWave(id, 0);
+  assert.equal(g.move(id, archer.uid, 2), false, 'not during a wave');
+});
+
+test('every class has two specialisations, chosen once at level six', () => {
+  for (const k of UNIT_KEYS) { assert.equal(SPECS[k].length, 2, k); assert.notEqual(SPECS[k][0].key, SPECS[k][1].key); }
+  const { g, id } = newGame();
+  const u = g.units[0];
+  u.lv = SPEC_LEVEL - 1;
+  assert.equal(g.canSpecialize(u), false); assert.equal(g.specialize(id, u.uid, 1), false);
+  u.lv = SPEC_LEVEL;
+  assert.equal(g.snapshot().ro.find((r) => r[0] === u.uid)[16], 1, 'the roster says who can choose');
+  for (const bad of [0, 3, '1', null]) assert.equal(g.specialize(id, u.uid, bad), false);
+  assert.ok(g.specialize(id, u.uid, 2));
+  assert.equal(u.spec, 2); assert.equal(g.specialize(id, u.uid, 1), false, 'the choice is final');
+  assert.equal(g.snapshot().ro.find((r) => r[0] === u.uid)[15], 2);
+});
+
+test('specialisations change how a class fights', () => {
+  const spec = (k, branch, f, extra) => { const t = lone(k, () => {}, extra); t.u.spec = branch; return f(t); };
+  const power = (k, b) => spec(k, b, ({ g, u }) => g.unitPower(u) / u.p);
+  const range = (k, b) => spec(k, b, ({ g, u }) => g.unitRange(u) / u.range);
+  const reload = (k, b) => spec(k, b, ({ g, u }) => g.unitReload(u) / u.rcd);
+  near(power('archer', 1), 1.15); near(range('archer', 1), 1.35); near(reload('archer', 2), 0.65);
+  near(power('mage', 2), 1.35); near(power('spear', 2), 1.7); near(power('bomber', 1), 1.5); near(reload('priest', 2), 0.6);
+  near(range('bard', 2), 2); near(power('shield', 1), 1.5);
+  // siege bolt: flies on through three more monsters
+  const through = (b) => spec('crossbow', b, ({ g, post }) => {
+    const es = [3, 5, 7, 9, 11].map((d) => addEnemy(g, 1, post.x, post.z + d, { hp: 1e5 }));
+    for (const e of es) e.hp = 1e5 - es.indexOf(e);   // the nearest is the toughest, so it is shot first
+    g.updateUnits(0); seconds(g, 1.2);
+    return es.filter((e) => e.hp < 1e5 - 10).length;
+  });
+  assert.equal(through(0), 1); assert.equal(through(1), 4);
+  // headhunter: double damage to bosses
+  const boss = (b) => spec('crossbow', b, ({ g, u }) => { const e = addEnemy(g, 2, 40, 40, { hp: 1e5 }); g.hurtEnemy(e, 100, u, true); return 1e5 - e.hp; });
+  assert.equal(boss(2), 2 * boss(0));
+  // falconer: two arrows at two targets
+  const arrows = (b) => spec('ranger', b, ({ g, post }) => { addEnemy(g, 1, post.x, post.z + 5, { hp: 1e5 }); addEnemy(g, 1, post.x + 3, post.z + 6, { hp: 1e5 }); g.updateUnits(0); return g.projs.length; });
+  assert.equal(arrows(0), 1); assert.equal(arrows(1), 2);
+  // deadeye: more crits that hit three times as hard
+  spec('ranger', 2, ({ g, u }) => near(g.unitCrit(u), UNITS.ranger.crit + 0.25));
+  // archmage and blizzard: wider blasts; blizzard also slows harder
+  const blast = (k, b) => spec(k, b, ({ g, post }) => { addEnemy(g, 1, post.x, post.z + 6, { hp: 1e5 }); g.updateUnits(0); return g.projs[0]; });
+  near(blast('mage', 1).aoe, UNITS.mage.aoe * 1.4);
+  near(blast('frost', 1).aoe, UNITS.frost.aoe * 1.5); assert.equal(blast('frost', 1).slow, 0.65); assert.equal(blast('frost', 0).slow, UNITS.frost.slow);
+  // shatter: more damage to slowed monsters
+  const frozen = (b) => spec('frost', b, ({ g, u }) => { const e = addEnemy(g, 1, 40, 40, { hp: 1e5 }); e.slow = 2; g.hurtEnemy(e, 100, u, true); return 1e5 - e.hp; });
+  near(frozen(2), 130); near(frozen(0), 100);
+  // tempest: three more jumps
+  const jumps = (b) => spec('storm', b, ({ g, post }) => { const es = []; for (let i = 0; i < 10; i++) es.push(addEnemy(g, 0, post.x, post.z + 3 + i * 1.6, { hp: 1e5 })); g.updateUnits(0); return es.filter((e) => e.hp < 1e5).length; });
+  assert.equal(jumps(0), 5); assert.equal(jumps(1), 8);
+  // inferno: fire burns twice as hot
+  near(blast('pyro', 1).burn, blast('pyro', 0).burn * 2);
+  // plague: clouds last twice as long; acid: the cloud melts armour so everyone hurts them more
+  const cloud = (b) => spec('alchemist', b, ({ g, post }) => { const e = addEnemy(g, 1, post.x, post.z + 5, { hp: 1e6 }); g.updateUnits(0); seconds(g, 1); return { c: g.clouds[0], e }; });
+  near(cloud(1).c.t, cloud(0).c.t + 4, 0.01);
+  assert.equal(cloud(2).e.curseK, 0.2); assert.equal(cloud(0).e.curseK, 0);
+  // halberd: sweeps three monsters at once
+  const swept = (b) => spec('spear', b, ({ g, post }) => { const es = [-1.5, 0, 1.5, 3].map((dx) => addEnemy(g, 0, post.x + dx, post.z + 2, { hp: 1e5 })); g.updateUnits(0); return es.filter((e) => e.hp < 1e5).length; });
+  assert.equal(swept(0), 1); assert.equal(swept(1), 3);
+  // thornwall: monsters hurt themselves on the guarded wall
+  spec('shield', 2, ({ g, seg, post }) => {
+    g.updateSupport(0);
+    assert.equal(g.thornSeg[g.segs.indexOf(seg)], 0.5);
+    const e = addEnemy(g, 0, post.x, post.z + 1.4, { hp: 1e5, cd: 0 });
+    steps(g, 1);
+    assert.ok(e.hp < 1e5, 'the attacker is hurt');
+  });
+  // plaguebringer: three curses at once
+  const cursed = (b) => spec('hexer', b, ({ g, post }) => { const es = [0, 2, 4, 6].map((dx) => addEnemy(g, 1, post.x - 3 + dx, post.z + 6, { hp: 1e5 })); g.updateUnits(0); return es.filter((e) => e.curse > 0).length; });
+  assert.equal(cursed(0), 1); assert.equal(cursed(2), 3);
+});
+
+test('a musketeer fires a heavy ball that pierces armour and splashes', () => {
+  const { g, post, u } = lone('musketeer');
+  const a = addEnemy(g, 6, post.x, post.z + 8, { hp: 1e5 }), b = addEnemy(g, 0, post.x + 1, post.z + 8.5, { hp: 1e5 });
+  g.updateUnits(0);
+  assert.equal(g.projs.length, 1); assert.equal(g.projs[0].kind, 8);
+  seconds(g, 0.5);
+  near(1e5 - a.hp, UNITS.musketeer.p, 0.01);
+  assert.ok(b.hp < 1e5, 'the shot splashes');
+  assert.ok(g.unitReload(u) > 3, 'and takes a long time to reload');
+});
+
+test('a tinker speeds up every turret; an armourer makes them hit harder', () => {
+  const { g, u } = lone('tinker');
+  g.turrets.push({ k: 'bolt', lv: 1, spot: 0, cd: 0 });
+  g.updateSupport(0);
+  near(g.tinkerSpeed, UNITS.tinker.p);
+  addEnemy(g, 1, -12, -17, { hp: 1e6 });
+  g.updateTurrets(0);
+  near(g.turrets[0].cd, TURRETS.bolt.cd / (1 + UNITS.tinker.p));
+  const base = g.turretPower(g.turrets[0]);
+  u.spec = 2;
+  near(g.turretPower(g.turrets[0]), base * 1.15);
+  g.segs[g.slots[u.slot].seg].hp = 0;
+  g.updateSupport(0);
+  assert.equal(g.tinkerSpeed, 0, 'not from a fallen wall');
+});
+
+test('a sapper buries mines in front of the wall; they blow up under the first monster', () => {
+  const { g, post, u } = lone('sapper');
+  g.updateUnits(0);
+  assert.equal(g.mines.length, 0, 'no mines while nothing is coming');
+  const far = addEnemy(g, 1, 0, 50, { hp: 1e6 });
+  for (let i = 0; i < 400; i++) { u.cd = 0; g.updateUnits(0); }
+  assert.equal(g.mines.length, UNITS.sapper.mine, 'three mines at most');
+  for (const m of g.mines) assert.ok(m.z > post.z + 2.9 && m.z < post.z + 8.1 && Math.abs(m.x - post.x) <= 2.6, 'outside the wall, in front of the sapper');
+  assert.ok(g.fx.some((f) => f[0] === 31), 'the client hears a mine being laid');
+  assert.equal(g.snapshot().mn.length, 3);
+  const m = g.mines[0];
+  g.mines = [m];
+  const e = addEnemy(g, 1, m.x + 0.5, m.z, { hp: 1e5 }), flyer = addEnemy(g, 4, m.x, m.z, { hp: 1e5 });
+  g.updateHazards(0.05);
+  near(1e5 - e.hp, UNITS.sapper.p, 0.01);
+  assert.equal(flyer.hp, 1e5, 'flyers pass over');
+  assert.equal(g.mines.length, 0);
+  u.spec = 1; g.mines = [];
+  for (let i = 0; i < 400; i++) { u.cd = 0; g.updateUnits(0); }
+  assert.equal(g.mines.length, 5, 'a minelayer keeps two more');
+  assert.equal(g.move(1, u.uid, 0), false);
+  far.hp = 0;
+});
+
+test('six engineers: their own damage and every turret grow', () => {
+  const { g } = newGame();
+  g.units = []; g.st.dmg = 0; g.st.eng = 0;
+  g.turrets.push({ k: 'bolt', lv: 1, spot: 0, cd: 0 });
+  const m = place(g, 'musketeer', 6);
+  near(g.unitPower(m), UNITS.musketeer.p); near(g.turretPower(g.turrets[0]), TURRETS.bolt.p);
+  place(g, 'tinker', 7);
+  assert.equal(g.famTier.engineers, 1);
+  near(g.unitPower(m), UNITS.musketeer.p * 1.15); near(g.turretPower(g.turrets[0]), TURRETS.bolt.p * 1.15);
+});
+
+test('sellswords fight for one wave, learn nothing and cannot be trained, promoted or dismissed', () => {
+  const { g, id } = newGame();
+  const before = g.units.length;
+  g.gold = 1000;
+  assert.ok(g.applyEvent({ k: 'hire', gold: 40 }));
+  assert.equal(g.gold, 960); assert.equal(g.units.length, before + 2);
+  const temps = g.units.filter((u) => u.temp);
+  assert.equal(temps.length, 2); assert.ok(temps.every((u) => u.rar === 2 && u.name === 'Sellsword'));
+  assert.equal(g.army().length, before, 'they take no place on the walls');
+  assert.equal(g.train(id, temps[0].uid), false); assert.equal(g.dismiss(id, temps[0].uid), false);
+  assert.equal(g.snapshot().ro.find((r) => r[0] === temps[0].uid)[17], 1);
+  g.giveXp(temps[0], 1e6); assert.equal(temps[0].xp, 0);
+  g.chooseWave(id, 0); g.queue = []; g.enemies = [];
+  steps(g, 1);
+  assert.equal(g.units.filter((u) => u.temp).length, 0, 'gone after the wave');
+  takeRewards(g, id);
+});
+
+test('promotions stop at the best rarity of the age', () => {
+  const { g, id } = newGame();
+  const u = g.units[0];
+  const promote = () => { g.phase = 'reward'; g.picks = [{ type: 'spoils', opts: [{ type: 'promote', uid: u.uid, k: u.k, name: u.name, rar: u.rar }] }]; return g.choose(id, 0); };
+  assert.ok(promote()); assert.equal(u.rar, 1);
+  const lv = u.lv;
+  assert.ok(promote()); assert.equal(u.rar, 1, 'the timber age knows nothing better than rare'); assert.equal(u.lv, lv + 3);
+  g.age = 3;
+  for (let i = 0; i < 3; i++) promote();
+  assert.equal(u.rar, 4, 'mythic in the golden age');
+  near(u.p, UNITS[u.k].p * RARITY[4].mul, 0.01);
 });

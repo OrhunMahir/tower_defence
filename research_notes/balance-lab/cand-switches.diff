@@ -1,0 +1,50 @@
+--- server/game.js	2026-11-17 02:33:26
++++ cand/server/game.js	2026-11-17 12:23:38
+@@ -382,10 +382,14 @@
+     const glory = (tier) => (!this.lordRule('glory') ? 1 : tier === 'std' ? 0.85 : 1.25);
+     this.waves = pick.map((th, i) => {
+       const tier = tiers[i], T = TIERS[tier];
+-      const jitter = tier === 'std' ? 1 : (n < 6 ? 0.87 : 1) + rng() * 0.27;
+-      const chance = n < 8 ? 0 : this.rule('omens') ? 1 : tier === 'std' ? 0.2 : tier === 'hard' ? 0.4 : 1;
+-      const mod = rng() < chance ? MODS[Math.floor(rng() * MODS.length)] : null;
+-      const pts = budget(n) * T.pts * jitter * swell * (bossWave ? 0.6 : 1) * (mod === 'swarm' ? 1.5 : mod === 'giants' ? 0.55 : 1);
++      const E = process.env, Y1 = n <= YEAR_LEN && tier === 'hard';
++      const ramp = (v) => { const [lo, hi = lo] = String(v).split(':').map(Number); return lo + (hi - lo) * (n - 1) / (YEAR_LEN - 1); };
++      const tp = Y1 && E.HARD_PTS ? ramp(E.HARD_PTS) : T.pts;
++      const jitter = tier === 'std' ? 1 : (n < 6 ? 0.87 : 1) + rng() * (Y1 && E.HARD_JIT ? Number(E.HARD_JIT) : 0.27);
++      const chance = n < 8 ? 0 : this.rule('omens') ? 1 : tier === 'std' ? 0.2 : tier === 'hard' ? (Y1 && E.HARD_MOD ? Number(E.HARD_MOD) : 0.4) : 1;
++      let mod = rng() < chance ? MODS[Math.floor(rng() * MODS.length)] : null;
++      if (Y1 && E.NO_MODS && mod && E.NO_MODS.split(',').includes(mod)) mod = null;
++      const pts = budget(n) * tp * jitter * swell * (bossWave ? 0.6 : 1) * (mod === 'swarm' ? 1.5 : mod === 'giants' ? 0.55 : 1);
+       const w = th.w || Object.fromEntries(regular.map((t) => [t, 1 / regular.length]));
+       const c = ENEMIES.map(() => 0);
+       for (const t in w) c[t] = Math.max(1, Math.round((pts * w[t]) / ENEMIES[t].points));
+@@ -1850,7 +1854,7 @@
+   // Burning and cursed monsters, what lies on the ground, buried mines and regenerating hordes.
+   updateHazards(dt) {
+     const tired = this.waveT > 2 * CHARGE_AFTER;   // a long fight wears the horde down: no more mending
+-    const regrow = (this.mod === 'regen' ? 0.012 : 0) + 0.005 * this.mut('regrow');
++    const regrow = (this.mod === 'regen' ? Number(process.env.REGEN || 0.012) : 0) + 0.005 * this.mut('regrow');
+     for (const e of this.enemies) {
+       if (e.burn > 0) { e.burn -= dt; this.hurtEnemy(e, e.burnDps * dt, e.burnU, false, false, false); if (e.burn <= 0) e.burnDps = 0; }
+       if (e.curse > 0) { e.curse -= dt; if (e.curse <= 0) e.curseK = 0; }
+--- server/data.js	2026-11-17 02:48:25
++++ cand/server/data.js	2026-11-17 12:23:38
+@@ -91,7 +91,7 @@
+   { key: 'skytyrant', hp: 2000, speed: 2.0, dmg: 36, r: 2.2, gold: 150, wallMul: 0, points: 30, boss: true, fly: true, power: 'dive', pcd: 8 },
+   { key: 'blightling', hp: 36, speed: 5.2, dmg: 14, r: 0.65, gold: 2, wallMul: 2.5, points: 2.5, unlock: 9, boom: true },
+   { key: 'shaman', hp: 70, speed: 2.8, dmg: 4, r: 0.75, gold: 5, wallMul: 1, points: 4, unlock: 11, ranged: 13, heal: 0.04 },
+-  { key: 'ram', hp: 420, speed: 1.5, dmg: 30, r: 1.4, gold: 12, wallMul: 5, points: 9, unlock: 14, armor: 6 },
++  { key: 'ram', hp: Number(process.env.RAM_HP || 420), speed: Number(process.env.RAM_SPEED || 1.5), dmg: Number(process.env.RAM_DMG || 30), r: 1.4, gold: 12, wallMul: Number(process.env.RAM_WALL || 5), points: Number(process.env.RAM_PTS || 9), unlock: Number(process.env.RAM_UNLOCK || 14), armor: 6 },
+   { key: 'burrower', hp: 110, speed: 2.4, dmg: 14, r: 0.85, gold: 6, wallMul: 0, points: 5, unlock: 18, burrow: true },
+   { key: 'wraith', hp: 60, speed: 4.0, dmg: 9, r: 0.7, gold: 4, wallMul: 1, points: 3, unlock: 22, dodge: 0.45 },
+   { key: 'hurler', hp: 520, speed: 1.4, dmg: 26, r: 1.6, gold: 16, wallMul: 2.5, points: 10, unlock: 26, ranged: 14, rcd: 3 },
+@@ -114,7 +114,7 @@
+   { key: 'ironhide', w: { 6: 0.6, 1: 0.4 } },
+   { key: 'blight', w: { 10: 0.55, 0: 0.45 } },
+   { key: 'coven', w: { 11: 0.25, 1: 0.4, 0: 0.35 } },
+-  { key: 'battering', w: { 12: 0.5, 0: 0.5 } },
++  { key: 'battering', w: process.env.RAM_MIX === 'brute' ? { 12: Number(process.env.RAM_SHARE || 0.5), 1: 1 - Number(process.env.RAM_SHARE || 0.5) } : { 12: Number(process.env.RAM_SHARE || 0.5), 0: 1 - Number(process.env.RAM_SHARE || 0.5) } },
+   { key: 'underminers', w: { 13: 0.55, 0: 0.45 } },
+   { key: 'haunting', w: { 14: 0.65, 4: 0.35 } },
+   { key: 'bombardment', w: { 15: 0.5, 3: 0.5 } },

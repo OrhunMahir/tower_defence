@@ -1,0 +1,280 @@
+# Summaries of the second day of measuring (2026-11-17, evening). Raw rows are not kept.
+
+## batch2
+c5 (RAM_PTS=12 HARD_PTS=1.6) [natural] 1452 waves  fell  34 ( 2.3%)  badly hurt  11 ( 0.8%)  keep lost  5.7%  walls lost  3.5%  down 0.07  50s  count 87
+    w06-09          192 waves  fell   5 ( 2.6%)  badly hurt   3 ( 1.6%)  keep lost  9.0%  walls lost  6.3%  down 0.09  54s  count 47
+    w10-16          516 waves  fell  14 ( 2.7%)  badly hurt   7 ( 1.4%)  keep lost  7.2%  walls lost  4.4%  down 0.09  50s  count 81
+    w17-24          420 waves  fell   7 ( 1.7%)  badly hurt   1 ( 0.2%)  keep lost  4.2%  walls lost  2.7%  down 0.05  49s  count 98
+    w25-32          324 waves  fell   8 ( 2.5%)  badly hurt   0 ( 0.0%)  keep lost  3.4%  walls lost  1.6%  down 0.04  50s  count 105
+    warband         158 waves  fell   4 ( 2.5%)  badly hurt   5 ( 3.2%)  keep lost  9.7%  walls lost  6.0%  down 0.07  50s  count 85
+    wx blizzard      64 waves  fell   2 ( 3.1%)  badly hurt   0 ( 0.0%)  keep lost  3.8%  walls lost  0.9%  down 0.00  50s  count 104
+    wx clear        580 waves  fell  15 ( 2.6%)  badly hurt   7 ( 1.2%)  keep lost  6.6%  walls lost  3.7%  down 0.08  49s  count 84
+    wx fog          172 waves  fell   7 ( 4.1%)  badly hurt   1 ( 0.6%)  keep lost  8.1%  walls lost  3.5%  down 0.12  51s  count 96
+    wx gale         164 waves  fell   4 ( 2.4%)  badly hurt   1 ( 0.6%)  keep lost  5.7%  walls lost  3.8%  down 0.05  49s  count 86
+    wx heat          96 waves  fell   4 ( 4.2%)  badly hurt   0 ( 0.0%)  keep lost  7.5%  walls lost  5.2%  down 0.13  51s  count 83
+    wx rain         136 waves  fell   1 ( 0.7%)  badly hurt   1 ( 0.7%)  keep lost  4.1%  walls lost  3.7%  down 0.04  53s  count 73
+    wx snow         116 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  1.0%  walls lost  1.3%  down 0.00  54s  count 105
+    wx storm        124 waves  fell   1 ( 0.8%)  badly hurt   1 ( 0.8%)  keep lost  4.4%  walls lost  4.4%  down 0.03  50s  count 82
+c5 (RAM_PTS=12 HARD_PTS=1.6) [battering]  227 waves  fell  19 ( 8.4%)  badly hurt   0 ( 0.0%)  keep lost 10.9%  walls lost  6.4%  down 0.34  61s  count 105
+    w10-16           41 waves  fell   6 (14.6%)  badly hurt   0 ( 0.0%)  keep lost 19.7%  walls lost  9.0%  down 0.56  59s  count 84
+    w17-24          105 waves  fell   9 ( 8.6%)  badly hurt   0 ( 0.0%)  keep lost 11.5%  walls lost  7.3%  down 0.32  61s  count 108
+    w25-32           81 waves  fell   4 ( 4.9%)  badly hurt   0 ( 0.0%)  keep lost  5.7%  walls lost  4.0%  down 0.25  63s  count 110
+c6 (RAM_PTS=12 HARD_PTS=1.5) [natural] 1452 waves  fell  19 ( 1.3%)  badly hurt  13 ( 0.9%)  keep lost  4.3%  walls lost  3.1%  down 0.04  49s  count 84
+    w06-09          192 waves  fell   2 ( 1.0%)  badly hurt   1 ( 0.5%)  keep lost  6.2%  walls lost  5.6%  down 0.04  52s  count 44
+    w10-16          516 waves  fell   7 ( 1.4%)  badly hurt  12 ( 2.3%)  keep lost  5.5%  walls lost  4.0%  down 0.06  49s  count 78
+    w17-24          420 waves  fell   7 ( 1.7%)  badly hurt   0 ( 0.0%)  keep lost  3.8%  walls lost  2.4%  down 0.04  47s  count 96
+    w25-32          324 waves  fell   3 ( 0.9%)  badly hurt   0 ( 0.0%)  keep lost  2.0%  walls lost  1.3%  down 0.02  49s  count 104
+    warband         158 waves  fell   2 ( 1.3%)  badly hurt   5 ( 3.2%)  keep lost  6.4%  walls lost  5.4%  down 0.03  49s  count 83
+    wx blizzard      64 waves  fell   1 ( 1.6%)  badly hurt   0 ( 0.0%)  keep lost  2.4%  walls lost  0.7%  down 0.00  49s  count 103
+    wx clear        580 waves  fell   9 ( 1.6%)  badly hurt   7 ( 1.2%)  keep lost  5.0%  walls lost  3.3%  down 0.06  47s  count 81
+    wx fog          172 waves  fell   7 ( 4.1%)  badly hurt   1 ( 0.6%)  keep lost  7.7%  walls lost  3.3%  down 0.10  49s  count 94
+    wx gale         164 waves  fell   1 ( 0.6%)  badly hurt   2 ( 1.2%)  keep lost  3.5%  walls lost  3.3%  down 0.02  48s  count 84
+    wx heat          96 waves  fell   0 ( 0.0%)  badly hurt   2 ( 2.1%)  keep lost  3.8%  walls lost  4.5%  down 0.00  51s  count 79
+    wx rain         136 waves  fell   0 ( 0.0%)  badly hurt   1 ( 0.7%)  keep lost  2.8%  walls lost  3.1%  down 0.00  52s  count 70
+    wx snow         116 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  0.8%  walls lost  1.1%  down 0.00  53s  count 104
+    wx storm        124 waves  fell   1 ( 0.8%)  badly hurt   0 ( 0.0%)  keep lost  3.6%  walls lost  3.9%  down 0.02  47s  count 78
+c6 (RAM_PTS=12 HARD_PTS=1.5) [battering]  227 waves  fell  11 ( 4.8%)  badly hurt   2 ( 0.9%)  keep lost  7.4%  walls lost  5.6%  down 0.19  60s  count 102
+    w10-16           41 waves  fell   3 ( 7.3%)  badly hurt   1 ( 2.4%)  keep lost 13.7%  walls lost  7.8%  down 0.20  59s  count 78
+    w17-24          105 waves  fell   6 ( 5.7%)  badly hurt   1 ( 1.0%)  keep lost  8.2%  walls lost  6.5%  down 0.20  60s  count 106
+    w25-32           81 waves  fell   2 ( 2.5%)  badly hurt   0 ( 0.0%)  keep lost  3.1%  walls lost  3.4%  down 0.16  61s  count 110
+c9 (RAM_PTS=12 HARD_PTS=1.65) [natural] 1452 waves  fell  51 ( 3.5%)  badly hurt  25 ( 1.7%)  keep lost  6.9%  walls lost  3.8%  down 0.09  51s  count 88
+    w06-09          192 waves  fell   8 ( 4.2%)  badly hurt   7 ( 3.6%)  keep lost 10.6%  walls lost  6.3%  down 0.10  55s  count 48
+    w10-16          516 waves  fell  18 ( 3.5%)  badly hurt  16 ( 3.1%)  keep lost  8.0%  walls lost  4.8%  down 0.11  51s  count 83
+    w17-24          420 waves  fell  15 ( 3.6%)  badly hurt   2 ( 0.5%)  keep lost  6.1%  walls lost  2.9%  down 0.08  49s  count 99
+    w25-32          324 waves  fell  10 ( 3.1%)  badly hurt   0 ( 0.0%)  keep lost  4.1%  walls lost  1.7%  down 0.06  50s  count 106
+    warband         158 waves  fell  10 ( 6.3%)  badly hurt  10 ( 6.3%)  keep lost 12.6%  walls lost  6.5%  down 0.16  51s  count 87
+    wx blizzard      64 waves  fell   3 ( 4.7%)  badly hurt   0 ( 0.0%)  keep lost  5.4%  walls lost  1.2%  down 0.00  51s  count 105
+    wx clear        580 waves  fell  25 ( 4.3%)  badly hurt  11 ( 1.9%)  keep lost  8.1%  walls lost  3.9%  down 0.13  49s  count 85
+    wx fog          172 waves  fell  10 ( 5.8%)  badly hurt   3 ( 1.7%)  keep lost  9.8%  walls lost  3.6%  down 0.11  51s  count 97
+    wx gale         164 waves  fell   5 ( 3.0%)  badly hurt   3 ( 1.8%)  keep lost  6.2%  walls lost  4.0%  down 0.07  50s  count 88
+    wx heat          96 waves  fell   3 ( 3.1%)  badly hurt   5 ( 5.2%)  keep lost  7.4%  walls lost  5.8%  down 0.09  53s  count 84
+    wx rain         136 waves  fell   3 ( 2.2%)  badly hurt   2 ( 1.5%)  keep lost  5.9%  walls lost  3.9%  down 0.04  54s  count 74
+    wx snow         116 waves  fell   1 ( 0.9%)  badly hurt   0 ( 0.0%)  keep lost  1.8%  walls lost  1.3%  down 0.03  54s  count 105
+    wx storm        124 waves  fell   1 ( 0.8%)  badly hurt   1 ( 0.8%)  keep lost  4.8%  walls lost  4.7%  down 0.03  50s  count 84
+c9 (RAM_PTS=12 HARD_PTS=1.65) [battering]  227 waves  fell  18 ( 7.9%)  badly hurt   1 ( 0.4%)  keep lost 10.8%  walls lost  6.7%  down 0.32  63s  count 105
+    w10-16           41 waves  fell   4 ( 9.8%)  badly hurt   0 ( 0.0%)  keep lost 16.0%  walls lost  8.4%  down 0.41  62s  count 86
+    w17-24          105 waves  fell  10 ( 9.5%)  badly hurt   1 ( 1.0%)  keep lost 12.6%  walls lost  7.8%  down 0.33  63s  count 109
+    w25-32           81 waves  fell   4 ( 4.9%)  badly hurt   0 ( 0.0%)  keep lost  5.9%  walls lost  4.4%  down 0.25  64s  count 110
+c10 (RAM_PTS=12 HARD_PTS=1.5:1.75) [natural] 1452 waves  fell  43 ( 3.0%)  badly hurt  16 ( 1.1%)  keep lost  6.2%  walls lost  3.6%  down 0.08  50s  count 87
+    w06-09          192 waves  fell   7 ( 3.6%)  badly hurt   4 ( 2.1%)  keep lost  9.1%  walls lost  6.0%  down 0.11  53s  count 45
+    w10-16          516 waves  fell  11 ( 2.1%)  badly hurt  11 ( 2.1%)  keep lost  6.4%  walls lost  4.3%  down 0.07  50s  count 81
+    w17-24          420 waves  fell  15 ( 3.6%)  badly hurt   1 ( 0.2%)  keep lost  6.2%  walls lost  2.9%  down 0.09  49s  count 99
+    w25-32          324 waves  fell  10 ( 3.1%)  badly hurt   0 ( 0.0%)  keep lost  4.2%  walls lost  1.8%  down 0.05  51s  count 106
+    warband         158 waves  fell   7 ( 4.4%)  badly hurt   4 ( 2.5%)  keep lost 10.1%  walls lost  6.4%  down 0.11  50s  count 85
+    wx blizzard      64 waves  fell   3 ( 4.7%)  badly hurt   0 ( 0.0%)  keep lost  5.4%  walls lost  1.1%  down 0.00  51s  count 106
+    wx clear        580 waves  fell  17 ( 2.9%)  badly hurt   9 ( 1.6%)  keep lost  6.6%  walls lost  3.7%  down 0.09  49s  count 84
+    wx fog          172 waves  fell  13 ( 7.6%)  badly hurt   1 ( 0.6%)  keep lost 11.4%  walls lost  4.0%  down 0.17  51s  count 97
+    wx gale         164 waves  fell   3 ( 1.8%)  badly hurt   2 ( 1.2%)  keep lost  5.1%  walls lost  3.8%  down 0.04  49s  count 87
+    wx heat          96 waves  fell   3 ( 3.1%)  badly hurt   2 ( 2.1%)  keep lost  6.6%  walls lost  5.2%  down 0.07  51s  count 82
+    wx rain         136 waves  fell   3 ( 2.2%)  badly hurt   1 ( 0.7%)  keep lost  5.1%  walls lost  3.7%  down 0.06  53s  count 73
+    wx snow         116 waves  fell   0 ( 0.0%)  badly hurt   0 ( 0.0%)  keep lost  1.6%  walls lost  1.4%  down 0.00  56s  count 106
+    wx storm        124 waves  fell   1 ( 0.8%)  badly hurt   1 ( 0.8%)  keep lost  4.2%  walls lost  4.4%  down 0.03  49s  count 82
+c10 (RAM_PTS=12 HARD_PTS=1.5:1.75) [battering]  227 waves  fell  18 ( 7.9%)  badly hurt   2 ( 0.9%)  keep lost 10.7%  walls lost  6.6%  down 0.30  62s  count 105
+    w10-16           41 waves  fell   5 (12.2%)  badly hurt   1 ( 2.4%)  keep lost 18.2%  walls lost  8.4%  down 0.41  60s  count 84
+    w17-24          105 waves  fell  10 ( 9.5%)  badly hurt   1 ( 1.0%)  keep lost 12.3%  walls lost  7.5%  down 0.34  62s  count 109
+    w25-32           81 waves  fell   3 ( 3.7%)  badly hurt   0 ( 0.0%)  keep lost  4.9%  walls lost  4.4%  down 0.17  65s  count 110
+c7 (HARD_MOD=0.2) [natural] 1452 waves  fell  79 ( 5.4%)  badly hurt  32 ( 2.2%)  keep lost  9.4%  walls lost  4.3%  down 0.17  52s  count 91
+    w06-09          192 waves  fell  11 ( 5.7%)  badly hurt   6 ( 3.1%)  keep lost 13.6%  walls lost  6.9%  down 0.20  57s  count 51
+    w10-16          516 waves  fell  25 ( 4.8%)  badly hurt  25 ( 4.8%)  keep lost 10.2%  walls lost  5.3%  down 0.21  53s  count 87
+    w17-24          420 waves  fell  28 ( 6.7%)  badly hurt   1 ( 0.2%)  keep lost  9.5%  walls lost  3.7%  down 0.19  50s  count 101
+    w25-32          324 waves  fell  15 ( 4.6%)  badly hurt   0 ( 0.0%)  keep lost  5.6%  walls lost  2.0%  down 0.07  51s  count 107
+    warband         158 waves  fell  10 ( 6.3%)  badly hurt   9 ( 5.7%)  keep lost 14.0%  walls lost  7.1%  down 0.20  53s  count 89
+    wx blizzard      64 waves  fell   3 ( 4.7%)  badly hurt   0 ( 0.0%)  keep lost  5.4%  walls lost  1.1%  down 0.00  52s  count 106
+    wx clear        580 waves  fell  31 ( 5.3%)  badly hurt  17 ( 2.9%)  keep lost  9.8%  walls lost  4.6%  down 0.18  51s  count 88
+    wx fog          172 waves  fell  21 (12.2%)  badly hurt   1 ( 0.6%)  keep lost 16.3%  walls lost  4.5%  down 0.27  52s  count 100
+    wx gale         164 waves  fell   9 ( 5.5%)  badly hurt   4 ( 2.4%)  keep lost  9.4%  walls lost  4.6%  down 0.18  51s  count 90
+    wx heat          96 waves  fell   7 ( 7.3%)  badly hurt   4 ( 4.2%)  keep lost 11.8%  walls lost  6.1%  down 0.29  54s  count 88
+    wx rain         136 waves  fell   4 ( 2.9%)  badly hurt   3 ( 2.2%)  keep lost  7.8%  walls lost  4.4%  down 0.14  56s  count 77
+    wx snow         116 waves  fell   2 ( 1.7%)  badly hurt   0 ( 0.0%)  keep lost  2.9%  walls lost  1.7%  down 0.08  56s  count 107
+    wx storm        124 waves  fell   2 ( 1.6%)  badly hurt   3 ( 2.4%)  keep lost  6.3%  walls lost  5.3%  down 0.09  52s  count 88
+c7 (HARD_MOD=0.2) [battering]  227 waves  fell  64 (28.2%)  badly hurt   3 ( 1.3%)  keep lost 32.2%  walls lost 11.3%  down 1.32  67s  count 107
+    w10-16           41 waves  fell  17 (41.5%)  badly hurt   0 ( 0.0%)  keep lost 47.8%  walls lost 14.0%  down 1.49  66s  count 95
+    w17-24          105 waves  fell  32 (30.5%)  badly hurt   3 ( 2.9%)  keep lost 35.4%  walls lost 13.0%  down 1.58  65s  count 110
+    w25-32           81 waves  fell  15 (18.5%)  badly hurt   0 ( 0.0%)  keep lost 20.1%  walls lost  7.6%  down 0.90  69s  count 110
+c8 (RAM_PTS=12 HARD_PTS=1.6 HARD_MOD=0.2) [natural] 1452 waves  fell  29 ( 2.0%)  badly hurt  14 ( 1.0%)  keep lost  5.2%  walls lost  3.4%  down 0.06  50s  count 87
+    w06-09          192 waves  fell   5 ( 2.6%)  badly hurt   3 ( 1.6%)  keep lost  9.0%  walls lost  6.3%  down 0.09  54s  count 47
+    w10-16          516 waves  fell   9 ( 1.7%)  badly hurt  10 ( 1.9%)  keep lost  6.1%  walls lost  4.2%  down 0.06  50s  count 82
+    w17-24          420 waves  fell   7 ( 1.7%)  badly hurt   1 ( 0.2%)  keep lost  4.0%  walls lost  2.7%  down 0.05  48s  count 99
+    w25-32          324 waves  fell   8 ( 2.5%)  badly hurt   0 ( 0.0%)  keep lost  3.3%  walls lost  1.6%  down 0.05  50s  count 105
+    warband         158 waves  fell   3 ( 1.9%)  badly hurt   7 ( 4.4%)  keep lost  9.0%  walls lost  5.9%  down 0.05  50s  count 85
+    wx blizzard      64 waves  fell   1 ( 1.6%)  badly hurt   0 ( 0.0%)  keep lost  2.2%  walls lost  0.9%  down 0.00  50s  count 104
+    wx clear        580 waves  fell  12 ( 2.1%)  badly hurt   8 ( 1.4%)  keep lost  5.8%  walls lost  3.6%  down 0.07  49s  count 84
+    wx fog          172 waves  fell   6 ( 3.5%)  badly hurt   1 ( 0.6%)  keep lost  7.5%  walls lost  3.3%  down 0.08  51s  count 98
+    wx gale         164 waves  fell   4 ( 2.4%)  badly hurt   0 ( 0.0%)  keep lost  5.4%  walls lost  3.8%  down 0.05  49s  count 86
+    wx heat          96 waves  fell   3 ( 3.1%)  badly hurt   2 ( 2.1%)  keep lost  6.7%  walls lost  5.0%  down 0.09  51s  count 83
+    wx rain         136 waves  fell   1 ( 0.7%)  badly hurt   2 ( 1.5%)  keep lost  4.2%  walls lost  3.7%  down 0.04  53s  count 73
+    wx snow         116 waves  fell   1 ( 0.9%)  badly hurt   0 ( 0.0%)  keep lost  1.5%  walls lost  1.3%  down 0.03  54s  count 106
+    wx storm        124 waves  fell   1 ( 0.8%)  badly hurt   1 ( 0.8%)  keep lost  4.3%  walls lost  4.4%  down 0.02  49s  count 82
+c8 (RAM_PTS=12 HARD_PTS=1.6 HARD_MOD=0.2) [battering]  227 waves  fell  16 ( 7.0%)  badly hurt   1 ( 0.4%)  keep lost 10.6%  walls lost  6.3%  down 0.27  62s  count 105
+    w10-16           41 waves  fell   5 (12.2%)  badly hurt   1 ( 2.4%)  keep lost 19.1%  walls lost  9.0%  down 0.51  60s  count 85
+    w17-24          105 waves  fell   8 ( 7.6%)  badly hurt   0 ( 0.0%)  keep lost 11.7%  walls lost  7.2%  down 0.26  61s  count 108
+    w25-32           81 waves  fell   3 ( 3.7%)  badly hurt   0 ( 0.0%)  keep lost  5.0%  walls lost  3.8%  down 0.16  64s  count 110
+n-muts (without muts) [natural] 1452 waves  fell  77 ( 5.3%)  badly hurt  32 ( 2.2%)  keep lost  9.2%  walls lost  4.2%  down 0.17  52s  count 90
+    w06-09          192 waves  fell  11 ( 5.7%)  badly hurt   6 ( 3.1%)  keep lost 13.6%  walls lost  6.9%  down 0.20  57s  count 51
+    w10-16          516 waves  fell  26 ( 5.0%)  badly hurt  25 ( 4.8%)  keep lost 10.3%  walls lost  5.3%  down 0.20  53s  count 86
+    w17-24          420 waves  fell  28 ( 6.7%)  badly hurt   1 ( 0.2%)  keep lost  9.2%  walls lost  3.5%  down 0.17  49s  count 100
+    w25-32          324 waves  fell  12 ( 3.7%)  badly hurt   0 ( 0.0%)  keep lost  4.7%  walls lost  1.9%  down 0.09  50s  count 106
+    warband         158 waves  fell   9 ( 5.7%)  badly hurt   8 ( 5.1%)  keep lost 12.8%  walls lost  6.7%  down 0.14  52s  count 89
+    wx blizzard      64 waves  fell   1 ( 1.6%)  badly hurt   0 ( 0.0%)  keep lost  2.3%  walls lost  1.0%  down 0.00  51s  count 106
+    wx clear        580 waves  fell  32 ( 5.5%)  badly hurt  17 ( 2.9%)  keep lost 10.0%  walls lost  4.5%  down 0.19  51s  count 87
+    wx fog          172 waves  fell  19 (11.0%)  badly hurt   1 ( 0.6%)  keep lost 15.0%  walls lost  4.4%  down 0.26  51s  count 99
+    wx gale         164 waves  fell  10 ( 6.1%)  badly hurt   5 ( 3.0%)  keep lost  9.9%  walls lost  4.4%  down 0.20  51s  count 90
+    wx heat          96 waves  fell   6 ( 6.3%)  badly hurt   4 ( 4.2%)  keep lost 10.6%  walls lost  6.2%  down 0.20  54s  count 87
+    wx rain         136 waves  fell   5 ( 3.7%)  badly hurt   2 ( 1.5%)  keep lost  8.0%  walls lost  4.3%  down 0.13  56s  count 77
+    wx snow         116 waves  fell   2 ( 1.7%)  badly hurt   0 ( 0.0%)  keep lost  2.8%  walls lost  1.7%  down 0.09  54s  count 106
+    wx storm        124 waves  fell   2 ( 1.6%)  badly hurt   3 ( 2.4%)  keep lost  6.2%  walls lost  5.1%  down 0.08  52s  count 87
+n-muts (without muts) [battering]  227 waves  fell  42 (18.5%)  badly hurt   3 ( 1.3%)  keep lost 23.2%  walls lost  9.8%  down 0.85  67s  count 107
+    w10-16           41 waves  fell  11 (26.8%)  badly hurt   2 ( 4.9%)  keep lost 36.2%  walls lost 12.9%  down 1.10  68s  count 93
+    w17-24          105 waves  fell  22 (21.0%)  badly hurt   1 ( 1.0%)  keep lost 26.6%  walls lost 11.1%  down 0.94  65s  count 110
+    w25-32           81 waves  fell   9 (11.1%)  badly hurt   0 ( 0.0%)  keep lost 12.1%  walls lost  6.6%  down 0.60  69s  count 110
+n-adapt (without adapt) [natural] 1452 waves  fell  86 ( 5.9%)  badly hurt  33 ( 2.3%)  keep lost 10.0%  walls lost  4.4%  down 0.18  52s  count 90
+    w06-09          192 waves  fell  11 ( 5.7%)  badly hurt   6 ( 3.1%)  keep lost 13.6%  walls lost  6.9%  down 0.20  57s  count 51
+    w10-16          516 waves  fell  29 ( 5.6%)  badly hurt  26 ( 5.0%)  keep lost 11.1%  walls lost  5.4%  down 0.22  53s  count 87
+    w17-24          420 waves  fell  32 ( 7.6%)  badly hurt   1 ( 0.2%)  keep lost 10.4%  walls lost  3.8%  down 0.23  49s  count 100
+    w25-32          324 waves  fell  14 ( 4.3%)  badly hurt   0 ( 0.0%)  keep lost  5.4%  walls lost  1.8%  down 0.05  51s  count 107
+    warband         158 waves  fell  11 ( 7.0%)  badly hurt  10 ( 6.3%)  keep lost 14.6%  walls lost  7.0%  down 0.22  52s  count 89
+    wx blizzard      64 waves  fell   3 ( 4.7%)  badly hurt   0 ( 0.0%)  keep lost  5.6%  walls lost  1.1%  down 0.00  51s  count 106
+    wx clear        580 waves  fell  34 ( 5.9%)  badly hurt  17 ( 2.9%)  keep lost 10.4%  walls lost  4.6%  down 0.19  51s  count 87
+    wx fog          172 waves  fell  21 (12.2%)  badly hurt   1 ( 0.6%)  keep lost 16.1%  walls lost  4.7%  down 0.28  52s  count 99
+    wx gale         164 waves  fell  11 ( 6.7%)  badly hurt   5 ( 3.0%)  keep lost 10.6%  walls lost  4.7%  down 0.25  51s  count 90
+    wx heat          96 waves  fell   7 ( 7.3%)  badly hurt   4 ( 4.2%)  keep lost 11.9%  walls lost  6.3%  down 0.25  54s  count 87
+    wx rain         136 waves  fell   5 ( 3.7%)  badly hurt   3 ( 2.2%)  keep lost  8.5%  walls lost  4.5%  down 0.15  56s  count 77
+    wx snow         116 waves  fell   2 ( 1.7%)  badly hurt   0 ( 0.0%)  keep lost  2.9%  walls lost  1.4%  down 0.03  55s  count 106
+    wx storm        124 waves  fell   3 ( 2.4%)  badly hurt   3 ( 2.4%)  keep lost  7.4%  walls lost  5.4%  down 0.10  52s  count 88
+n-adapt (without adapt) [battering]  227 waves  fell  50 (22.0%)  badly hurt   3 ( 1.3%)  keep lost 26.2%  walls lost 10.3%  down 1.03  68s  count 107
+    w10-16           41 waves  fell  13 (31.7%)  badly hurt   2 ( 4.9%)  keep lost 40.1%  walls lost 13.9%  down 1.37  68s  count 94
+    w17-24          105 waves  fell  27 (25.7%)  badly hurt   1 ( 1.0%)  keep lost 30.3%  walls lost 11.7%  down 1.20  67s  count 110
+    w25-32           81 waves  fell  10 (12.3%)  badly hurt   0 ( 0.0%)  keep lost 13.8%  walls lost  6.9%  down 0.63  69s  count 110
+n-weather (without weather) [natural] 1452 waves  fell  80 ( 5.5%)  badly hurt  41 ( 2.8%)  keep lost  9.7%  walls lost  4.3%  down 0.17  52s  count 90
+    w06-09          192 waves  fell  11 ( 5.7%)  badly hurt   7 ( 3.6%)  keep lost 13.8%  walls lost  6.9%  down 0.19  57s  count 51
+    w10-16          516 waves  fell  29 ( 5.6%)  badly hurt  34 ( 6.6%)  keep lost 11.4%  walls lost  5.4%  down 0.22  53s  count 87
+    w17-24          420 waves  fell  22 ( 5.2%)  badly hurt   0 ( 0.0%)  keep lost  7.9%  walls lost  3.4%  down 0.15  49s  count 100
+    w25-32          324 waves  fell  18 ( 5.6%)  badly hurt   0 ( 0.0%)  keep lost  6.7%  walls lost  2.1%  down 0.10  49s  count 107
+    warband         158 waves  fell   9 ( 5.7%)  badly hurt   9 ( 5.7%)  keep lost 13.1%  walls lost  6.8%  down 0.15  52s  count 89
+    wx clear       1452 waves  fell  80 ( 5.5%)  badly hurt  41 ( 2.8%)  keep lost  9.7%  walls lost  4.3%  down 0.17  52s  count 90
+n-weather (without weather) [battering]  227 waves  fell  49 (21.6%)  badly hurt   4 ( 1.8%)  keep lost 25.8%  walls lost 10.5%  down 1.07  64s  count 107
+    w10-16           41 waves  fell  15 (36.6%)  badly hurt   1 ( 2.4%)  keep lost 44.5%  walls lost 14.2%  down 1.76  69s  count 94
+    w17-24          105 waves  fell  24 (22.9%)  badly hurt   3 ( 2.9%)  keep lost 27.7%  walls lost 11.4%  down 1.15  63s  count 110
+    w25-32           81 waves  fell  10 (12.3%)  badly hurt   0 ( 0.0%)  keep lost 13.9%  walls lost  7.4%  down 0.63  63s  count 110
+n-season (without season) [natural] 1452 waves  fell  76 ( 5.2%)  badly hurt  42 ( 2.9%)  keep lost  9.3%  walls lost  4.5%  down 0.15  52s  count 90
+    w06-09          192 waves  fell   6 ( 3.1%)  badly hurt  17 ( 8.9%)  keep lost 12.3%  walls lost  7.7%  down 0.09  55s  count 47
+    w10-16          516 waves  fell  28 ( 5.4%)  badly hurt  24 ( 4.7%)  keep lost 10.8%  walls lost  5.5%  down 0.20  55s  count 87
+    w17-24          420 waves  fell  20 ( 4.8%)  badly hurt   1 ( 0.2%)  keep lost  7.5%  walls lost  3.4%  down 0.15  49s  count 100
+    w25-32          324 waves  fell  22 ( 6.8%)  badly hurt   0 ( 0.0%)  keep lost  7.6%  walls lost  2.3%  down 0.10  50s  count 107
+    warband         158 waves  fell   5 ( 3.2%)  badly hurt  18 (11.4%)  keep lost 12.7%  walls lost  6.9%  down 0.06  53s  count 88
+    wx blizzard      64 waves  fell   4 ( 6.3%)  badly hurt   0 ( 0.0%)  keep lost  7.2%  walls lost  1.4%  down 0.00  51s  count 106
+    wx clear        580 waves  fell  29 ( 5.0%)  badly hurt  22 ( 3.8%)  keep lost  9.7%  walls lost  4.7%  down 0.14  50s  count 87
+    wx fog          172 waves  fell  17 ( 9.9%)  badly hurt   1 ( 0.6%)  keep lost 14.0%  walls lost  4.2%  down 0.20  50s  count 99
+    wx gale         164 waves  fell  10 ( 6.1%)  badly hurt   6 ( 3.7%)  keep lost 10.2%  walls lost  4.9%  down 0.20  51s  count 90
+    wx heat          96 waves  fell   8 ( 8.3%)  badly hurt   3 ( 3.1%)  keep lost 12.1%  walls lost  6.6%  down 0.30  56s  count 87
+    wx rain         136 waves  fell   3 ( 2.2%)  badly hurt   5 ( 3.7%)  keep lost  6.6%  walls lost  4.8%  down 0.13  55s  count 75
+    wx snow         116 waves  fell   3 ( 2.6%)  badly hurt   0 ( 0.0%)  keep lost  3.7%  walls lost  1.8%  down 0.11  53s  count 106
+    wx storm        124 waves  fell   2 ( 1.6%)  badly hurt   5 ( 4.0%)  keep lost  6.7%  walls lost  5.3%  down 0.07  54s  count 88
+n-season (without season) [battering]  227 waves  fell  47 (20.7%)  badly hurt   2 ( 0.9%)  keep lost 24.9%  walls lost 10.2%  down 0.99  67s  count 107
+    w10-16           41 waves  fell  13 (31.7%)  badly hurt   2 ( 4.9%)  keep lost 40.6%  walls lost 13.4%  down 1.56  70s  count 94
+    w17-24          105 waves  fell  22 (21.0%)  badly hurt   0 ( 0.0%)  keep lost 25.3%  walls lost 10.9%  down 1.01  67s  count 110
+    w25-32           81 waves  fell  12 (14.8%)  badly hurt   0 ( 0.0%)  keep lost 16.5%  walls lost  7.6%  down 0.67  66s  count 110
+DONE
+
+## batch3
+a-easy (RAM_PTS=12): 48 runs, median 32, past wave 32: 0/48 (0%), min - | fell in w1-9: 1, w10-16: 10, w17-24: 4, w25-32: 2 | hard: 0 waves, 0 fell (0.0%), keep lost 0% | std: 1298 waves, 17 fell, keep lost 3.2% | hard battering 0/0 fell | from a full keep 17/17
+  fell on: 9 10 14 14 15 16 16 16 16 16 16 18 21 21 24 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+
+b-mixed (RAM_PTS=12 HARD_PTS=1.65): 48 runs, median 32, past wave 32: 0/48 (0%), min - | fell in w1-9: 2, w10-16: 4, w17-24: 9, w25-32: 3 | hard: 488 waves, 18 fell (3.7%), keep lost 7% | std: 790 waves, 0 fell, keep lost 1.0% | hard battering 16/1 fell | from a full keep 18/18
+  fell on: 6 6 10 10 10 12 18 18 18 20 20 20 22 22 22 26 28 30 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+
+c-mixed (RAM_PTS=12 HARD_PTS=1.5:1.75): 48 runs, median 32, past wave 32: 0/48 (0%), min - | fell in w1-9: 4, w10-16: 5, w17-24: 2, w25-32: 6 | hard: 493 waves, 16 fell (3.2%), keep lost 6% | std: 797 waves, 1 fell, keep lost 0.9% | hard battering 15/4 fell | from a full keep 17/17
+  fell on: 6 6 6 8 10 10 12 14 14 22 22 26 26 26 30 30 30 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+
+a-mixed (RAM_PTS=12 HARD_PTS=1.6): 48 runs, median 32, past wave 32: 0/48 (0%), min - | fell in w1-9: 1, w10-16: 8, w17-24: 3, w25-32: 5 | hard: 492 waves, 16 fell (3.3%), keep lost 6% | std: 800 waves, 1 fell, keep lost 1.2% | hard battering 24/3 fell | from a full keep 17/17
+  fell on: 6 10 10 10 10 10 14 14 16 18 20 22 26 28 28 28 30 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+
+c-hard (RAM_PTS=12 HARD_PTS=1.5:1.75): 48 runs, median 32, past wave 32: 0/48 (0%), min - | fell in w1-9: 3, w10-16: 1, w17-24: 2, w25-32: 1 | hard: 1422 waves, 7 fell (0.5%), keep lost 2% | std: 0 waves, 0 fell, keep lost 0.0% | hard battering 61/2 fell | from a full keep 7/7
+  fell on: 6 8 9 16 17 24 30 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+
+b-hard (RAM_PTS=12 HARD_PTS=1.65): 48 runs, median 32, past wave 32: 0/48 (0%), min - | fell in w1-9: 2, w10-16: 0, w17-24: 0, w25-32: 1 | hard: 1483 waves, 3 fell (0.2%), keep lost 2% | std: 0 waves, 0 fell, keep lost 0.0% | hard battering 65/0 fell | from a full keep 3/3
+  fell on: 7 7 29 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+ 32+
+e0 (X=1) [natural] 3544 waves  fell  36 ( 1.0%)  badly hurt  16 ( 0.5%)  keep lost  3.0%  walls lost  2.5%  down 0.04  42s  count 60
+    w06-09          576 waves  fell   1 ( 0.2%)  badly hurt   3 ( 0.5%)  keep lost  2.5%  walls lost  3.3%  down 0.01  39s  count 31
+    w10-16         1096 waves  fell  16 ( 1.5%)  badly hurt  12 ( 1.1%)  keep lost  4.2%  walls lost  3.2%  down 0.04  40s  count 48
+    w17-24          980 waves  fell  15 ( 1.5%)  badly hurt   1 ( 0.1%)  keep lost  3.5%  walls lost  2.3%  down 0.06  43s  count 69
+    w25-32          892 waves  fell   4 ( 0.4%)  badly hurt   0 ( 0.0%)  keep lost  1.2%  walls lost  1.4%  down 0.02  47s  count 86
+    battering       205 waves  fell  25 (12.2%)  badly hurt   5 ( 2.4%)  keep lost 15.9%  walls lost  7.6%  down 0.49  61s  count 74
+    warband         380 waves  fell   3 ( 0.8%)  badly hurt   4 ( 1.1%)  keep lost  2.9%  walls lost  4.2%  down 0.02  40s  count 63
+e0 (X=1) [battering]  557 waves  fell  45 ( 8.1%)  badly hurt   9 ( 1.6%)  keep lost 12.1%  walls lost  7.0%  down 0.35  60s  count 76
+    w10-16           89 waves  fell  11 (12.4%)  badly hurt   4 ( 4.5%)  keep lost 20.1%  walls lost  8.3%  down 0.48  56s  count 50
+    w17-24          245 waves  fell  28 (11.4%)  badly hurt   5 ( 2.0%)  keep lost 15.8%  walls lost  8.0%  down 0.50  58s  count 68
+    w25-32          223 waves  fell   6 ( 2.7%)  badly hurt   0 ( 0.0%)  keep lost  4.8%  walls lost  5.3%  down 0.14  63s  count 96
+e1 (RAM_PTS=12) [natural] 3544 waves  fell  21 ( 0.6%)  badly hurt  14 ( 0.4%)  keep lost  2.5%  walls lost  2.3%  down 0.02  42s  count 60
+    w06-09          576 waves  fell   1 ( 0.2%)  badly hurt   3 ( 0.5%)  keep lost  2.5%  walls lost  3.3%  down 0.01  39s  count 31
+    w10-16         1096 waves  fell  13 ( 1.2%)  badly hurt  11 ( 1.0%)  keep lost  3.9%  walls lost  3.0%  down 0.03  40s  count 48
+    w17-24          980 waves  fell   5 ( 0.5%)  badly hurt   0 ( 0.0%)  keep lost  2.3%  walls lost  2.0%  down 0.02  42s  count 69
+    w25-32          892 waves  fell   2 ( 0.2%)  badly hurt   0 ( 0.0%)  keep lost  0.9%  walls lost  1.2%  down 0.01  46s  count 86
+    battering       205 waves  fell  11 ( 5.4%)  badly hurt   3 ( 1.5%)  keep lost  8.1%  walls lost  5.4%  down 0.18  56s  count 72
+    warband         380 waves  fell   3 ( 0.8%)  badly hurt   4 ( 1.1%)  keep lost  2.9%  walls lost  4.2%  down 0.02  40s  count 63
+e1 (RAM_PTS=12) [battering]  557 waves  fell  11 ( 2.0%)  badly hurt   6 ( 1.1%)  keep lost  4.5%  walls lost  4.9%  down 0.08  55s  count 74
+    w10-16           89 waves  fell   5 ( 5.6%)  badly hurt   3 ( 3.4%)  keep lost 11.6%  walls lost  6.7%  down 0.17  52s  count 49
+    w17-24          245 waves  fell   4 ( 1.6%)  badly hurt   3 ( 1.2%)  keep lost  4.8%  walls lost  5.4%  down 0.07  54s  count 66
+    w25-32          223 waves  fell   2 ( 0.9%)  badly hurt   0 ( 0.0%)  keep lost  1.4%  walls lost  3.5%  down 0.05  58s  count 93
+DONE
+
+## batch4
+L-mixed-base (X=1): 240 runs, median 32, past wave 32: 0/240 (0%), min - | fell in w1-9: 26, w10-16: 29, w17-24: 37, w25-32: 19 | hard: 2285 waves, 109 fell (4.8%), keep lost 8% | std: 3640 waves, 2 fell, keep lost 0.8% | hard battering 89/28 fell | from a full keep 111/111
+L-mixed-c (RAM_PTS=12 HARD_PTS=1.5:1.75): 240 runs, median 32, past wave 32: 0/240 (0%), min - | fell in w1-9: 16, w10-16: 26, w17-24: 30, w25-32: 27 | hard: 2414 waves, 91 fell (3.8%), keep lost 7% | std: 3892 waves, 8 fell, keep lost 1.1% | hard battering 102/23 fell | from a full keep 99/99
+L-mixed-b (RAM_PTS=12 HARD_PTS=1.65): 240 runs, median 32, past wave 32: 0/240 (0%), min - | fell in w1-9: 17, w10-16: 25, w17-24: 36, w25-32: 18 | hard: 2384 waves, 94 fell (3.9%), keep lost 7% | std: 3842 waves, 2 fell, keep lost 0.9% | hard battering 98/14 fell | from a full keep 96/96
+L-mixed-a (RAM_PTS=12 HARD_PTS=1.6): 240 runs, median 32, past wave 32: 0/240 (0%), min - | fell in w1-9: 17, w10-16: 21, w17-24: 19, w25-32: 19 | hard: 2485 waves, 69 fell (2.8%), keep lost 6% | std: 4044 waves, 7 fell, keep lost 1.0% | hard battering 108/15 fell | from a full keep 76/76
+L-mixed-ram (RAM_PTS=12): 240 runs, median 32, past wave 32: 0/240 (0%), min - | fell in w1-9: 26, w10-16: 22, w17-24: 28, w25-32: 14 | hard: 2373 waves, 89 fell (3.8%), keep lost 7% | std: 3815 waves, 1 fell, keep lost 0.8% | hard battering 94/15 fell | from a full keep 90/90
+L-easy-base (X=1): 240 runs, median 32, past wave 32: 0/240 (0%), min - | fell in w1-9: 9, w10-16: 42, w17-24: 27, w25-32: 11 | hard: 0 waves, 0 fell (0.0%), keep lost 0% | std: 6386 waves, 89 fell, keep lost 3.3% | hard battering 0/0 fell | from a full keep 89/89
+L-easy-ram (RAM_PTS=12): 240 runs, median 32, past wave 32: 0/240 (0%), min - | fell in w1-9: 9, w10-16: 36, w17-24: 17, w25-32: 6 | hard: 0 waves, 0 fell (0.0%), keep lost 0% | std: 6646 waves, 68 fell, keep lost 2.9% | hard battering 0/0 fell | from a full keep 68/68
+L-hard-base (X=1): 240 runs, median 32, past wave 32: 0/240 (0%), min - | fell in w1-9: 25, w10-16: 12, w17-24: 18, w25-32: 6 | hard: 6601 waves, 61 fell (0.9%), keep lost 2% | std: 0 waves, 0 fell, keep lost 0.0% | hard battering 277/15 fell | from a full keep 61/61
+L-hard-c (RAM_PTS=12 HARD_PTS=1.5:1.75): 240 runs, median 32, past wave 32: 0/240 (0%), min - | fell in w1-9: 19, w10-16: 3, w17-24: 7, w25-32: 4 | hard: 7055 waves, 33 fell (0.5%), keep lost 2% | std: 0 waves, 0 fell, keep lost 0.0% | hard battering 319/4 fell | from a full keep 33/33
+L-hard-b (RAM_PTS=12 HARD_PTS=1.65): 240 runs, median 32, past wave 32: 0/240 (0%), min - | fell in w1-9: 17, w10-16: 4, w17-24: 9, w25-32: 5 | hard: 7059 waves, 35 fell (0.5%), keep lost 2% | std: 0 waves, 0 fell, keep lost 0.0% | hard battering 325/3 fell | from a full keep 35/35
+L-hard-a (RAM_PTS=12 HARD_PTS=1.6): 240 runs, median 32, past wave 32: 0/240 (0%), min - | fell in w1-9: 12, w10-16: 4, w17-24: 7, w25-32: 2 | hard: 7219 waves, 25 fell (0.3%), keep lost 2% | std: 0 waves, 0 fell, keep lost 0.0% | hard battering 318/6 fell | from a full keep 25/25
+DONE
+
+## batch5
+A-mixed-b [mixed] (RAM_PTS=12 HARD_PTS=1.65): 960 runs, median 32, past wave 32: 0/960 (0%), min - | fell in w1-9: 54, w10-16: 121, w17-24: 114, w25-32: 72 | hard: 9640 waves, 349 fell (3.6%), keep lost 7% | std: 15585 waves, 12 fell, keep lost 0.9% | hard battering 377/55 fell | from a full keep 361/361
+A-mixed-a [mixed] (RAM_PTS=12 HARD_PTS=1.6): 960 runs, median 32, past wave 32: 0/960 (0%), min - | fell in w1-9: 52, w10-16: 97, w17-24: 98, w25-32: 65 | hard: 9917 waves, 292 fell (2.9%), keep lost 6% | std: 16116 waves, 20 fell, keep lost 1.0% | hard battering 450/49 fell | from a full keep 312/312
+A-mixed-ram [mixed] (RAM_PTS=12): 960 runs, median 32, past wave 32: 0/960 (0%), min - | fell in w1-9: 92, w10-16: 121, w17-24: 133, w25-32: 59 | hard: 9247 waves, 396 fell (4.3%), keep lost 8% | std: 14833 waves, 9 fell, keep lost 0.8% | hard battering 373/59 fell | from a full keep 405/405
+A-mixed-base [mixed] (X=1): 960 runs, median 32, past wave 32: 0/960 (0%), min - | fell in w1-9: 92, w10-16: 141, w17-24: 160, w25-32: 75 | hard: 8985 waves, 453 fell (5.0%), keep lost 8% | std: 14320 waves, 15 fell, keep lost 0.9% | hard battering 353/111 fell | from a full keep 468/468
+A-hard-b [hard] (RAM_PTS=12 HARD_PTS=1.65): 960 runs, median 32, past wave 32: 0/960 (0%), min - | fell in w1-9: 62, w10-16: 8, w17-24: 24, w25-32: 19 | hard: 28687 waves, 113 fell (0.4%), keep lost 2% | std: 0 waves, 0 fell, keep lost 0.0% | hard battering 1361/10 fell | from a full keep 113/113
+A-hard-a [hard] (RAM_PTS=12 HARD_PTS=1.6): 960 runs, median 32, past wave 32: 0/960 (0%), min - | fell in w1-9: 69, w10-16: 10, w17-24: 24, w25-32: 12 | hard: 28504 waves, 115 fell (0.4%), keep lost 2% | std: 0 waves, 0 fell, keep lost 0.0% | hard battering 1291/14 fell | from a full keep 115/115
+A-hard-ram [hard] (RAM_PTS=12): 960 runs, median 32, past wave 32: 0/960 (0%), min - | fell in w1-9: 98, w10-16: 17, w17-24: 38, w25-32: 24 | hard: 27416 waves, 177 fell (0.6%), keep lost 2% | std: 0 waves, 0 fell, keep lost 0.0% | hard battering 1239/20 fell | from a full keep 177/177
+A-hard-base [hard] (X=1): 960 runs, median 32, past wave 32: 0/960 (0%), min - | fell in w1-9: 98, w10-16: 27, w17-24: 68, w25-32: 30 | hard: 26870 waves, 223 fell (0.8%), keep lost 2% | std: 0 waves, 0 fell, keep lost 0.0% | hard battering 1177/68 fell | from a full keep 223/223
+A-easy-ram [easy] (RAM_PTS=12): 960 runs, median 32, past wave 32: 0/960 (0%), min - | fell in w1-9: 19, w10-16: 136, w17-24: 63, w25-32: 28 | hard: 0 waves, 0 fell (0.0%), keep lost 0% | std: 27160 waves, 246 fell, keep lost 2.7% | hard battering 0/0 fell | from a full keep 246/246
+A-easy-base [easy] (X=1): 960 runs, median 32, past wave 32: 0/960 (0%), min - | fell in w1-9: 19, w10-16: 156, w17-24: 100, w25-32: 39 | hard: 0 waves, 0 fell (0.0%), keep lost 0% | std: 26334 waves, 314 fell, keep lost 3.0% | hard battering 0/0 fell | from a full keep 314/314
+DONE
+
+## batch6
+normal-mixed           runs  48  median  36  mean  33.3  quartiles 22-42  deepest 62  past year one 30/48 (63%)  minutes 28  still standing 0  stuck 0  ages 10(46) 19(42) 27(33) 35(28) 44(12) 53(4)
+normal-hard            runs  48  median  59  mean  53.6  quartiles 41-65  deepest 73  past year one 45/48 (94%)  minutes 42  still standing 0  stuck 0  ages 10(46) 18(46) 26(46) 34(45) 42(37) 51(31)
+normal-easy            runs  48  median  41  mean  37.7  quartiles 21-50  deepest 68  past year one 31/48 (65%)  minutes 32  still standing 0  stuck 0  ages 10(47) 19(36) 27(33) 38(28) 47(12) 57(4)
+relaxed-easy           runs  48  median  61  mean  57.3  quartiles 49-66  deepest 82  past year one 47/48 (98%)  minutes 34  still standing 0  stuck 0  ages 10(48) 18(48) 26(47) 35(47) 44(42) 54(28)
+siege3-easy            runs  48  median  22  mean  26.8  quartiles 16-41  deepest 65  past year one 18/48 (38%)  minutes 33  still standing 0  stuck 0  ages 10(41) 19(25) 27(22) 36(14) 45(7) 61(2)
+siege6-easy            runs  48  median  14  mean  15.5  quartiles 8-17  deepest 50  past year one 4/48 (8%)  minutes 36  still standing 0  stuck 0  ages 10(33) 19(9) 27(5) 37(4) 47(2) -
+siege10-easy           runs  48  median   8  mean   8.0  quartiles 6-8  deepest 14  past year one 0/48 (0%)  minutes -  still standing 0  stuck 0  ages 11(9) - - - - -
+siege3-hard            runs  48  median  38  mean  34.2  quartiles 7-59  deepest 69  past year one 27/48 (56%)  minutes 41  still standing 0  stuck 0  ages 10(33) 18(31) 26(29) 34(27) 42(22) 51(14)
+siege5-hard            runs  48  median  17  mean  20.5  quartiles 7-33  deepest 69  past year one 13/48 (27%)  minutes 31  still standing 0  stuck 0  ages 10(30) 18(22) 26(15) 34(11) 43(6) 51(3)
+DONE
+
+## batch7
+old-normal-mixed       runs  48  median  36  mean  33.6  quartiles 19-50  deepest 68  past year one 25/48 (52%)  minutes 33  still standing 0  stuck 0  ages 10(45) 19(39) 27(28) 35(25) 44(17) 53(8)
+old-normal-hard        runs  48  median  50  mean  45.5  quartiles 38-60  deepest 81  past year one 38/48 (79%)  minutes 35  still standing 0  stuck 0  ages 10(45) 18(45) 26(39) 34(38) 43(32) 51(24)
+old-normal-easy        runs  48  median  36  mean  36.4  quartiles 18-50  deepest 66  past year one 31/48 (65%)  minutes 32  still standing 0  stuck 0  ages 10(47) 19(36) 27(32) 37(25) 47(15) 55(5)
+old-relaxed-easy       runs  48  median  59  mean  58.0  quartiles 52-67  deepest 74  past year one 46/48 (96%)  minutes 36  still standing 0  stuck 0  ages 10(48) 18(48) 26(46) 35(46) 44(43) 53(30)
+old-siege3-easy        runs  48  median  17  mean  25.4  quartiles 15-41  deepest 60  past year one 19/48 (40%)  minutes 36  still standing 0  stuck 0  ages 10(41) 19(21) 27(19) 36(17) 47(4) -
+old-siege6-easy        runs  48  median  14  mean  14.8  quartiles 8-16  deepest 46  past year one 3/48 (6%)  minutes 27  still standing 0  stuck 0  ages 10(33) 19(8) 27(5) 41(2) - -
+old-siege3-hard        runs  48  median  37  mean  32.9  quartiles 7-53  deepest 71  past year one 28/48 (58%)  minutes 37  still standing 0  stuck 0  ages 10(33) 18(30) 26(28) 34(28) 42(21) 51(15)
+old-siege5-hard        runs  48  median  16  mean  19.9  quartiles 6-31  deepest 67  past year one 11/48 (23%)  minutes 29  still standing 0  stuck 0  ages 10(27) 18(22) 26(16) 35(11) 43(5) 51(2)
+DONE
+
+## deadly offers on the same 363 castles, 4 rolls each
+deadly, old rules [natural] 1452 waves  fell 515 (35.5%)  badly hurt  66 ( 4.5%)  keep lost 40.5%  walls lost 10.9%  down 1.13  58s  count 101
+    w06-09          192 waves  fell  64 (33.3%)  badly hurt  12 ( 6.3%)  keep lost 42.0%  walls lost 11.8%  down 1.12  66s  count 76
+    w10-16          516 waves  fell 192 (37.2%)  badly hurt  50 ( 9.7%)  keep lost 45.2%  walls lost 12.4%  down 1.05  57s  count 102
+    w17-24          420 waves  fell 175 (41.7%)  badly hurt   4 ( 1.0%)  keep lost 44.0%  walls lost 11.0%  down 1.35  52s  count 106
+    w25-32          324 waves  fell  84 (25.9%)  badly hurt   0 ( 0.0%)  keep lost 27.5%  walls lost  7.6%  down 0.95  60s  count 109
+deadly, applied rules [natural] 1452 waves  fell 393 (27.1%)  badly hurt  59 ( 4.1%)  keep lost 32.1%  walls lost  9.0%  down 0.82  58s  count 99
+    w06-09          192 waves  fell  59 (30.7%)  badly hurt  10 ( 5.2%)  keep lost 38.0%  walls lost 11.1%  down 1.04  65s  count 71
+    w10-16          516 waves  fell 142 (27.5%)  badly hurt  47 ( 9.1%)  keep lost 35.5%  walls lost 10.4%  down 0.83  58s  count 99
+    w17-24          420 waves  fell 138 (32.9%)  badly hurt   2 ( 0.5%)  keep lost 35.8%  walls lost  9.0%  down 1.00  52s  count 105
+    w25-32          324 waves  fell  54 (16.7%)  badly hurt   0 ( 0.0%)  keep lost 18.5%  walls lost  5.4%  down 0.45  60s  count 108
+
+## the applied rule in the real files against candidate c9: identical line for line (1679 replays)
+applied rule (real files) [natural] 1452 waves  fell  51 ( 3.5%)  badly hurt  25 ( 1.7%)  keep lost  6.9%  walls lost  3.8%  down 0.09  51s  count 88
+applied rule (real files) [battering]  227 waves  fell  18 ( 7.9%)  badly hurt   1 ( 0.4%)  keep lost 10.8%  walls lost  6.7%  down 0.32  63s  count 105

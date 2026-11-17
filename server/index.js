@@ -5,13 +5,17 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
 import { randomInt } from 'node:crypto';
-import { Game, TICK, DIFFICULTY, LORDS, levelNeed, FINAL_WAVE } from './game.js';
+import { Game, TICK, seededRng } from './game.js';
+import { act, runOptions } from './act.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+// The rules are served too: the same files run in the browser when the game is played without a server.
 const MOUNTS = [
   ['/vendor/three/', path.join(ROOT, 'node_modules/three/')],
+  ['/rules/', path.join(ROOT, 'server/')],
   ['/', path.join(ROOT, 'client/')],
 ];
+const RULE_FILES = new Set(['game.js', 'data.js', 'act.js']);
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json' };
 export const MAX_PLAYERS = 4;
 const MAX_ROOMS = 200;
@@ -29,8 +33,8 @@ function serveStatic(req, res) {
   }
   for (const [prefix, dir] of MOUNTS) {
     if (!url.startsWith(prefix)) continue;
-    const file = path.join(dir, url.slice(prefix.length));
-    if (!file.startsWith(dir)) break;
+    const rel = url.slice(prefix.length), file = path.join(dir, rel);
+    if (!file.startsWith(dir) || (prefix === '/rules/' && !RULE_FILES.has(rel))) break;
     fs.readFile(file, (err, data) => {
       if (err) return notFound();
       res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
@@ -51,11 +55,13 @@ export function start({ port = 3000, host = '127.0.0.1', dev = false } = {}) {
   const rooms = new Map();
   const wss = new WebSocketServer({ server, maxPayload: 64 * 1024 });
 
-  function openRoom(solo, diff, lord) {
+  function openRoom(solo, m) {
     if (rooms.size >= MAX_ROOMS) return null;
     let code;
     do code = solo ? `solo-${randomInt(1e9)}` : newCode(); while (rooms.has(code));
-    const room = { code, solo, game: new Game(Math.random, Object.hasOwn(DIFFICULTY, diff) ? diff : 'normal', Object.hasOwn(LORDS, lord) ? lord : 'marshal'), clients: new Set(), phase: 'prep', speed: 1 };
+    // A daily challenge is dealt from its seed, so everyone gets the same run.
+    const rng = Number.isInteger(m.seed) ? seededRng(m.seed) : Math.random;
+    const room = { code, solo, game: new Game(rng, runOptions(m)), clients: new Set(), phase: 'prep', speed: 1 };
     rooms.set(code, room);
     return room;
   }
@@ -84,7 +90,7 @@ export function start({ port = 3000, host = '127.0.0.1', dev = false } = {}) {
           if (!r || r.solo) return reply({ t: 'err', why: 'noroom' });
           if (r.clients.size >= MAX_PLAYERS) return reply({ t: 'err', why: 'full' });
         } else {
-          r = openRoom(m.mode !== 'create', m.diff, m.lord);
+          r = openRoom(m.mode !== 'create', m);
           if (!r) return reply({ t: 'err', why: 'busy' });
           if (r.solo && m.save && !r.game.load(m.save)) reply({ t: 'err', why: 'badsave' });
         }
@@ -96,32 +102,8 @@ export function start({ port = 3000, host = '127.0.0.1', dev = false } = {}) {
         return;
       }
       if (!room) return;
-      const game = room.game;
-      let done = false;
-      if (m.t === 'wave') done = game.chooseWave(id, m.i);
-      else if (m.t === 'pick') done = game.choose(id, m.i);
-      else if (m.t === 'skip') done = game.skip(id);
-      else if (m.t === 'repick') done = game.rerollPick(id);
-      else if (m.t === 'buy') done = game.buy(id, m.i);
-      else if (m.t === 'lock') done = game.lock(id, m.i);
-      else if (m.t === 'reroll') done = game.rerollShop(id);
-      else if (m.t === 'train') done = game.train(id, m.u);
-      else if (m.t === 'dismiss') done = game.dismiss(id, m.u);
-      else if (m.t === 'up') done = game.upgrade(id, m.b);
-      else if (m.t === 'repair') done = game.repair(id, m.what);
-      else if (m.t === 'restart') done = game.restart(id);
-      else if (m.t === 'ability') done = game.ability(id, m.k, m.x, m.z);
-      else if (m.t === 'speed' && room.solo && [0, 1, 2, 3].includes(m.v)) room.speed = m.v;
-      else if (m.t === 'dev' && dev) {
-        done = true;
-        if (m.k === 'gold') game.gold += 500 + game.gold;
-        else if (m.k === 'boss' && game.phase === 'prep') { game.wave = Math.floor(game.wave / 10) * 10 + 9; game.makeWaveOffers(); }
-        else if (m.k === 'hurt') game.th.hp = Math.min(game.th.hp, 60);
-        else if (m.k === 'skip' && game.phase === 'prep') { game.wave += 9; game.makeWaveOffers(); game.makeShop(); }
-        else if (m.k === 'victory' && game.phase === 'prep') { game.wave = FINAL_WAVE; game.won = true; game.picks.unshift({ type: 'victory' }); game.nextPick(); }
-        else if (m.k === 'level' && game.phase === 'prep') { game.castleXp(levelNeed(game.level) - game.xp); game.nextPick(); }
-      }
-      if (done) sendSave(room);
+      if (m.t === 'speed') { if (room.solo && [0, 1, 2, 3].includes(m.v)) room.speed = m.v; return; }
+      if (act(room.game, id, m, dev)) sendSave(room);
     });
     ws.on('close', () => {
       if (!room) return;
@@ -153,5 +135,5 @@ export function start({ port = 3000, host = '127.0.0.1', dev = false } = {}) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const host = process.env.HOST || '127.0.0.1';
   start({ port: Number(process.env.PORT) || 3000, host, dev: process.argv.includes('--dev') })
-    .ready.then((port) => console.log(`Castle defense: http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`));
+    .ready.then((port) => console.log(`Hordewall: http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`));
 }

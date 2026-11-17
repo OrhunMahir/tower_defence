@@ -2,7 +2,7 @@
 // Browsers only allow audio after a click, so initAudio() is called from the start menu.
 
 let ctx = null, master = null, sfxBus = null, musicBus = null, noiseBuf = null;
-const prefs = { sfx: true, music: true };
+const prefs = { sfx: true, music: true, volume: 0.7 };
 const last = {};
 
 export function initAudio(saved = {}) {
@@ -11,7 +11,7 @@ export function initAudio(saved = {}) {
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return;
   ctx = new AC();
-  master = ctx.createGain(); master.gain.value = 0.7; master.connect(ctx.destination);
+  master = ctx.createGain(); master.gain.value = prefs.volume; master.connect(ctx.destination);
   sfxBus = ctx.createGain(); sfxBus.gain.value = prefs.sfx ? 1 : 0; sfxBus.connect(master);
   musicBus = ctx.createGain(); musicBus.gain.value = prefs.music ? 0.32 : 0; musicBus.connect(master);
   noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
@@ -25,6 +25,10 @@ export function setAudio(kind, on) {
   if (!ctx) return;
   const bus = kind === 'sfx' ? sfxBus : musicBus;
   bus.gain.setTargetAtTime(on ? (kind === 'sfx' ? 1 : 0.32) : 0, ctx.currentTime, 0.1);
+}
+export function setVolume(v) {
+  prefs.volume = Math.max(0, Math.min(1, v));
+  if (ctx) master.gain.setTargetAtTime(prefs.volume, ctx.currentTime, 0.05);
 }
 export const audioPrefs = () => ({ ...prefs });
 
@@ -82,8 +86,30 @@ const SOUNDS = {
   volley: () => { noise(0.7, { vol: 0.12, freq: 3000, type: 'bandpass', to: 600, q: 2 }); },
   mend: () => [392, 523, 659].forEach((f, i) => tone(f, 0.3, { type: 'triangle', vol: 0.06, at: i * 0.06 })),
   rally: () => { tone(262, 0.5, { type: 'sawtooth', vol: 0.07, attack: 0.05 }); tone(392, 0.6, { type: 'sawtooth', vol: 0.06, attack: 0.05, at: 0.18 }); },
-  victory: () => [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, 0.5, { type: 'triangle', vol: 0.09, at: i * 0.16 })),
   defeat: () => [392, 349, 311, 262].forEach((f, i) => tone(f, 0.7, { type: 'sine', vol: 0.1, at: i * 0.32 })),
+  // The endless update
+  thunder: () => allow('thunder', 300) && (noise(1.1, { vol: 0.3, freq: 400, to: 60 }), tone(55, 0.9, { vol: 0.2, to: 30 }), noise(0.08, { vol: 0.2, freq: 5000, type: 'highpass' })),
+  beam: () => allow('beam', 120) && tone(1900, 0.1, { type: 'sine', vol: 0.025, to: 2400 }),
+  mutate: () => { [311, 277, 233, 208].forEach((f, i) => tone(f, 0.6, { type: 'sawtooth', vol: 0.05, attack: 0.05, at: i * 0.14 })); noise(1.0, { vol: 0.05, freq: 300, to: 900 }); },
+  year: () => [392, 523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.9, { type: 'triangle', vol: 0.08, at: i * 0.14 })),
+  // The ages update
+  gun: () => allow('gun', 70) && (noise(0.12, { vol: 0.16, freq: 1800, to: 300 }), tone(160, 0.1, { vol: 0.1, to: 60 })),
+  mine: () => allow('mine', 200) && tone(520, 0.05, { type: 'square', vol: 0.03, to: 380 }),
+  build: () => [0, 0.14, 0.28].forEach((at) => { noise(0.05, { vol: 0.12, freq: 2200, type: 'bandpass', q: 2, at }); tone(190, 0.06, { vol: 0.08, at }); }),
+  age: () => { [262, 330, 392, 523, 659, 784].forEach((f, i) => tone(f, 0.9, { type: 'sawtooth', vol: 0.05, attack: 0.04, at: i * 0.13 })); noise(1.6, { vol: 0.03, freq: 900 }); tone(65, 1.4, { vol: 0.16, to: 50, at: 0.7 }); },
+  relic: () => [392, 494, 587, 784, 988].forEach((f, i) => tone(f, 0.7, { type: 'triangle', vol: 0.07, at: i * 0.1 })),
+  event: () => [440, 554].forEach((f, i) => tone(f, 0.5, { type: 'sine', vol: 0.08, at: i * 0.18 })),
+  freeze: () => { tone(2200, 0.7, { type: 'triangle', vol: 0.05, to: 500 }); noise(0.6, { vol: 0.06, freq: 6000, type: 'highpass' }); },
+  bounty: () => [1047, 1319, 1568, 2093].forEach((f, i) => tone(f, 0.14, { type: 'square', vol: 0.03, at: i * 0.06 })),
+  phoenix: () => { noise(1.4, { vol: 0.22, freq: 300, to: 3000 }); [330, 440, 554, 659, 880].forEach((f, i) => tone(f, 0.8, { type: 'triangle', vol: 0.08, at: 0.3 + i * 0.12 })); },
+  shriek: () => allow('shriek', 500) && (tone(900, 0.8, { type: 'sawtooth', vol: 0.06, to: 1900, attack: 0.05 }), noise(0.8, { vol: 0.05, freq: 4000, type: 'bandpass', q: 2 })),
+  quake: () => allow('quake', 300) && (noise(1.1, { vol: 0.35, freq: 260, to: 60 }), tone(48, 0.9, { vol: 0.28, to: 28 })),
+  rumble: () => allow('rumble', 600) && tone(62, 0.7, { vol: 0.12, to: 48, attack: 0.2 }),
+  stun: () => allow('stun', 400) && (tone(300, 0.35, { type: 'square', vol: 0.05, to: 120 }), noise(0.3, { vol: 0.1, freq: 1200, to: 300 })),
+  unlock: () => [659, 880, 1109, 1319].forEach((f, i) => tone(f, 0.3, { type: 'triangle', vol: 0.07, at: i * 0.07 })),
+  deny: () => allow('deny', 150) && tone(180, 0.14, { type: 'square', vol: 0.04, to: 130 }),
+  miss: () => allow('miss', 120) && noise(0.08, { vol: 0.03, freq: 5000, type: 'highpass' }),
+  dig: () => allow('dig', 300) && noise(0.4, { vol: 0.12, freq: 400, to: 150 }),
 };
 
 export function sfx(name) {

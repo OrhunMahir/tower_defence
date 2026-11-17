@@ -1,0 +1,41 @@
+<!doctype html>
+<!-- A working sheet for the pictures of the interface: every drawing at the sizes the game uses.
+     Serve the repository folder with any static server and open /scripts/icons.html. Not part of the game. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hordewall pictures</title>
+<style>
+  body{margin:0;padding:14px;background:#1a1512;color:#f4ecdc;font:13px/1.4 Georgia,serif}
+  h2{font-size:15px;margin:0 0 10px;font-weight:normal;color:#e9c46a}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(var(--big,62px) + 62px),1fr));gap:6px}
+  .cell{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px 5px;border:1px solid rgba(255,255,255,.07)}
+  .cell small{font-size:10.5px;opacity:.75}
+  .ico{width:1em;height:1em;overflow:visible;display:block}
+  .row{display:flex;gap:9px;align-items:center}
+  .big{font-size:var(--big,62px)}
+  .paper{font-size:40px;background:#eadcbb;color:#2a1f17;border-radius:7px 9px 6px 10px/9px 6px 10px 7px;padding:5px;--edge:transparent}
+  .small{font-size:18px;--sw:3px}.tiny{font-size:13px;--sw:3.6px}
+  .plain{display:flex;flex-wrap:wrap;gap:5px}.plain .paper{font-size:var(--big,30px);padding:3px;line-height:0}
+</style>
+</head>
+<body>
+<h2>Every picture: large on the dark panel, on a paper tile, and small in a line of text</h2>
+<div class="grid" id="grid"></div>
+<script type="module">
+  import { PICTURES, icon } from '../client/icons.js';
+  // ?q=a,b shows the pictures whose name has a or b in it; ?from=40&n=35 shows a stretch of the list; ?big=96 sets the size.
+  const ask = new URLSearchParams(location.search), only = ask.get('q'), from = Number(ask.get('from') || 0), n = Number(ask.get('n') || 999), big = ask.get('big');
+  if (big) document.body.style.setProperty('--big', `${big}px`);
+  // ?plain shows nothing but the pictures, each once on a paper tile: the whole set at a glance.
+  if (ask.has('plain')) {
+    document.querySelector('h2').textContent = `All ${PICTURES.length} pictures`;
+    document.getElementById('grid').className = 'plain';
+    document.getElementById('grid').innerHTML = PICTURES.map((k) => `<span class="paper" title="${k}">${icon(k)}</span>`).join('');
+  } else
+  document.getElementById('grid').innerHTML = PICTURES.filter((k) => !only || only.split(',').some((q) => k.includes(q))).slice(from, from + n).map((k) => `<div class="cell">
+    <div class="row"><span class="big">${icon(k)}</span><span><span class="paper" style="display:block">${icon(k)}</span></span></div>
+    <div class="row"><span class="small">${icon(k)}</span><span class="tiny">${icon(k)}</span><small>${k}</small></div></div>`).join('');
+</script>
+</body>
+</html>
